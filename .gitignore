@@ -1,0 +1,8 @@
+# Build artefacts
+result
+result-*
+
+# Python / Nix
+__pycache__/
+*.pyc
+.direnv/
