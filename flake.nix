@@ -58,7 +58,7 @@
     # Replaces the deprecated aussprachetrainer flake.
     # CLI tool (gp): IPA transcription, Edge TTS, Whisper STT scoring,
     # Vim modal REPL, fuzzy autocomplete over 170k words, SQLite spaced repetition.
-    german-pronunciation-cli.url = "github:m-amir-gomaa/The_German_Pronunciation_CLI_App";
+    # german-pronunciation-cli.url = "github:m-amir-gomaa/The_German_Pronunciation_CLI_App";
   };
   outputs =
     {
@@ -66,7 +66,7 @@
       fenix,
       nixpkgs,
       antigravity-nix,
-      german-pronunciation-cli,
+      # german-pronunciation-cli,  # uncomment when flake.nix is added to the repo
       home-manager,
       ...
     }:
@@ -93,7 +93,7 @@
             nixpkgs.config.allowUnfree = true;
             environment.systemPackages = [
               antigravity-nix.packages.x86_64-linux.default
-              german-pronunciation-cli.packages.x86_64-linux.default
+              # german-pronunciation-cli.packages.x86_64-linux.default  # uncomment when flake.nix is added to the repo
             ];
           }
           # ── Overlays: Fenix Rust + autocommit + pinned Hugo ───────────────────
