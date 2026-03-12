@@ -120,7 +120,7 @@ in
         # Default is 300 (5 minutes) — not 30 — to avoid commit spam.
         INTERVAL=''${AUTOCOMMIT_INTERVAL:-"300"}
 
-        cat > "$CONFIG_DIR/config.yaml" <<EOF
+        cat > "$CONFIG_DIR/config.yaml" <<-EOF
             repo_path: "${repoDir}"
             interval_seconds: $INTERVAL
             api_key: "$AUTOCOMMIT_API_KEY"
@@ -128,7 +128,7 @@ in
             push: $PUSH
             model: "$MODEL"
             timeout: 30
-            EOF
+        EOF
 
         # Main loop: check for meaningful changes, then commit and push.
         while true; do
@@ -157,8 +157,9 @@ in
           # grep -oP '\d+(?= insertion)' extracts just the insertion count.
           # The || echo 0 handles the case where there are no insertions at all
           # (e.g. pure deletions), preventing the script from crashing on empty grep.
-          INSERTIONS=$($GIT diff --cached --shortstat | grep -oP '\d+(?= insertion)' || echo 0)
-          DELETIONS=$($GIT diff --cached --shortstat | grep -oP '\d+(?= deletion)' || echo 0)
+          # NOTE: Since `set -e` is on, we have to handle the grep error explicitly in a subshell.
+          INSERTIONS=$( ($GIT diff --cached --shortstat | grep -oP '\d+(?= insertion)') || echo 0)
+          DELETIONS=$( ($GIT diff --cached --shortstat | grep -oP '\d+(?= deletion)') || echo 0)
           TOTAL_LINES=$(( INSERTIONS + DELETIONS ))
 
           # Meaningfulness filter:

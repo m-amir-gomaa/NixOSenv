@@ -292,6 +292,7 @@
     obs-studio
     wl-clipboard
     cliphist
+    wl-clip-persist
     brightnessctl
     pavucontrol
     xdg-utils

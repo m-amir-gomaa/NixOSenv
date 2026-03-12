@@ -271,7 +271,9 @@
         # wl-paste --watch calls `cliphist store` each time the clipboard
         # changes, persisting entries in ~/.cache/cliphist/db.
         # The history is recalled with Super+V via a Rofi dmenu picker.
-        "${pkgs.cliphist}/bin/wl-paste --watch ${pkgs.cliphist}/bin/cliphist store"
+        "${pkgs.wl-clipboard}/bin/wl-paste --type text --watch ${pkgs.cliphist}/bin/cliphist store"
+        "${pkgs.wl-clipboard}/bin/wl-paste --type image --watch ${pkgs.cliphist}/bin/cliphist store"
+        "${pkgs.wl-clip-persist}/bin/wl-clip-persist --clipboard regular"
 
         # ── GVfs daemons — required for full Nautilus functionality ──────────
         # gvfsd         main daemon; handles trash://, smb://, mtp://, sftp://
