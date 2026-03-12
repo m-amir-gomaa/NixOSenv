@@ -74,3 +74,11 @@ sudo nixos-rebuild switch --flake ~/NixOSenv#nixos
 ## Previous AI Integration
 
 This repo previously included [Jarvis](https://github.com/m-amir-gomaa/Jarvis) — a local AI assistant with a hierarchical RAG database, episodic memory, and background learning services, all managed as Nix modules. It was deprecated in favour of using hosted AI APIs directly. The repository is archived and left public as a reference.
+
+---
+
+## External Flake Inputs
+
+This configuration pulls in personal projects as Nix flake inputs, installing them declaratively alongside system packages:
+
+- **[The German Pronunciation CLI](https://github.com/m-amir-gomaa/The_German_Pronunciation_CLI_App)** (`gp`) — a Rust CLI for German pronunciation training. Features IPA transcription via espeak-ng, Microsoft Edge TTS with offline Piper fallback, Whisper STT pronunciation scoring, a Vim modal REPL with fuzzy autocomplete over 170k words, and SQLite-backed spaced repetition. Replaces the deprecated [aussprachetrainer](https://github.com/m-amir-gomaa/aussprachetrainer) flake.

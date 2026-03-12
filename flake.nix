@@ -51,10 +51,14 @@
       url = "github:jacopone/antigravity-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # ── aussprachetrainer — German pronunciation trainer app ──────────────────
-    # A custom flake for a personal project.  Follows nixpkgs so it does not
-    # bring in a separate nixpkgs version.
-    aussprachetrainer.url = "github:m-amir-gomaa/aussprachetrainer";
+
+
+
+    # ── german-pronunciation-cli — Rust-based German pronunciation trainer ──────
+    # Replaces the deprecated aussprachetrainer flake.
+    # CLI tool (gp): IPA transcription, Edge TTS, Whisper STT scoring,
+    # Vim modal REPL, fuzzy autocomplete over 170k words, SQLite spaced repetition.
+    german-pronunciation-cli.url = "github:m-amir-gomaa/The_German_Pronunciation_CLI_App";
   };
   outputs =
     {
@@ -62,7 +66,7 @@
       fenix,
       nixpkgs,
       antigravity-nix,
-      aussprachetrainer,
+      german-pronunciation-cli,
       home-manager,
       ...
     }:
@@ -71,7 +75,7 @@
       # These can be built with `nix build .#PACKAGE_NAME`
       packages.x86_64-linux = {
         # default: the stable Rust toolchain (rustc + cargo)
-        default = fenix.packages.x86_64-linux.stable.toolchain;
+        default = fenix.packages.x86_64-linux.stable.toolchain; # CHANGED: minimal nightly → stable
         # autocommit: the AI autocommit tool (see modules/autocommit-pkg.nix)
         autocommit = nixpkgs.legacyPackages.x86_64-linux.callPackage ./modules/autocommit-pkg.nix { };
       };
@@ -89,7 +93,7 @@
             nixpkgs.config.allowUnfree = true;
             environment.systemPackages = [
               antigravity-nix.packages.x86_64-linux.default
-              aussprachetrainer.packages.x86_64-linux.default
+              german-pronunciation-cli.packages.x86_64-linux.default
             ];
           }
           # ── Overlays: Fenix Rust + autocommit + pinned Hugo ───────────────────
@@ -133,6 +137,7 @@
                 # withComponents builds a single derivation that merges all selected
                 # components; this avoids multiple PATH entries for rust tools.
                 (pkgs.fenix.stable.withComponents [
+                  # CHANGED: complete (nightly) → stable
                   "cargo"
                   "clippy"
                   "rust-src"
@@ -141,7 +146,7 @@
                   "rust-docs"
                 ])
                 # rust-analyzer: LSP for Rust; stable build to match the stable toolchain.
-                pkgs.fenix.stable.rust-analyzer
+                pkgs.fenix.stable.rust-analyzer # CHANGED: rust-analyzer-nightly → stable
                 pkgs.hugo
               ];
             }
