@@ -1,123 +1,77 @@
-# NixOS & Jarvis Ecosystem Guide ❄️🦾
+# NixOS System Configuration ❄️
 
-Welcome to your declarative NixOS environment. This repository (`~/NixOSenv`) manages your entire system state, user applications, and the Jarvis AI ecosystem.
+A fully declarative, reproducible NixOS environment managed with Nix flakes and Home Manager. The entire system — from bootloader to dotfiles to background services — is defined in version-controlled Nix expressions. Rebuilding from scratch on new hardware requires a single command.
 
----
+## What This Demonstrates
 
-## 📂 Repository Structure
-
-| Path | Purpose |
-| :--- | :--- |
-| `flake.nix` | The entrypoint for the entire system. Pins versions and defines inputs. |
-| `configuration.nix` | System-level settings: Bootloader, Hardware, Networking, and Core packages. |
-| `home.nix` | **Your Personal Environment**: Managed via Home Manager. Covers Zsh, Hyprland, and theming. |
-| `modules/jarvis.nix` | Declarative service definition for all Jarvis background processes. |
-| `dotfiles/` | Raw configuration files (e.g., `.p10k.zsh`) symlinked into your home directory via Nix. |
-| `Jarvis/` | The core Jarvis codebase (synced to GitHub). |
+- **Declarative infrastructure**: System state is fully described in code. No manual `apt install`, no configuration drift, no "works on my machine."
+- **Nix flakes**: All external dependencies (nixpkgs, Home Manager, third-party packages) are pinned to exact git revisions in `flake.lock` for reproducible builds.
+- **Custom Nix packaging**: Third-party tools not in nixpkgs are packaged from source with proper dependency declaration and patching (`modules/autocommit-pkg.nix`).
+- **systemd service authoring**: Background services written as Nix modules with secrets handling, environment variable overrides, and restart logic.
+- **Hardware-specific configuration**: NVIDIA Prime offload (hybrid GPU), PipeWire audio, TLP battery management, and Wayland compositor setup.
 
 ---
 
-## 🐚 How to Edit Zsh Configuration (Declarative)
+## Stack
 
-Your Zsh environment is now **100% managed via Nix**. Do **NOT** edit `~/.zshrc` directly, as it will be overwritten on the next rebuild.
+| Layer              | Technology                              |
+| :----------------- | :-------------------------------------- |
+| OS                 | NixOS (nixos-unstable)                  |
+| Package management | Nix flakes + Home Manager               |
+| Wayland compositor | Hyprland                                |
+| Audio              | PipeWire + WirePlumber                  |
+| Terminal           | Kitty                                   |
+| Editor             | Neovim (LSPs managed via Nix)           |
+| Shell              | Zsh + Oh-My-Zsh + Powerlevel10k         |
+| Status bar         | Waybar                                  |
+| Notifications      | Mako                                    |
+| Rust toolchain     | Fenix (stable, via overlay)             |
+| Networking         | systemd-networkd + iwd + DNS-over-HTTPS |
 
-### 1. Adding Aliases
-Open `home.nix` and find the `programs.zsh.shellAliases` block. Add your alias there:
-```nix
-shellAliases = {
-  myalias = "command --flag";
-};
-```
+---
 
-### 2. Adding Oh-My-Zsh Plugins
-Find the `programs.zsh.oh-my-zsh.plugins` list in `home.nix`:
-```nix
-plugins = [ "sudo" "git" "fzf-tab" "my-new-plugin" ];
-```
+## Repository Structure
 
-### 3. Environment Variables & PATH
-Add logic to the `programs.zsh.initContent` block (Nix multiline string):
-```nix
-initContent = ''
-  export MY_VAR="value"
-  export PATH="$PATH:/my/custom/path"
-'';
-```
+| Path                            | Purpose                                                                           |
+| :------------------------------ | :-------------------------------------------------------------------------------- |
+| `flake.nix`                     | Entrypoint. Pins all inputs and defines system outputs.                           |
+| `configuration.nix`             | System-level: boot, networking, GPU, audio, fonts, power management.              |
+| `home.nix`                      | User environment via Home Manager: shell, theme, session variables.               |
+| `hyprland.nix`                  | Wayland compositor keybinds and monitor configuration.                            |
+| `nvim.nix`                      | Neovim setup with LSP servers declared in Nix.                                    |
+| `waybar.nix`                    | Status bar configuration.                                                         |
+| `modules/autocommit-pkg.nix`    | Custom Nix package: builds the `autocommit` Python tool from source.              |
+| `modules/auto-git-nixosenv.nix` | systemd user service: AI-powered git autocommit with meaningful-change detection. |
+| `dotfiles/`                     | Raw config files (`.zshrc`, `.p10k.zsh`, kitty theme) symlinked into `~` via Nix. |
+| `cachix/`                       | Binary cache configuration to avoid recompiling heavy packages.                   |
 
-### 4. Applying Changes
-After editing `home.nix`, run the system rebuild alias:
+---
+
+## Notable: AI-Powered Autocommit Service
+
+`modules/auto-git-nixosenv.nix` defines a systemd user service that monitors this repository for changes and automatically commits them using an AI-generated commit message (via the OpenAI API).
+
+Key design decisions:
+
+- **Meaningful-change filter**: Only commits if at least 2 files or 5 lines changed — prevents noisy single-character commits.
+- **Secrets never touch the Nix store**: The API key is read from `~/.config/autocommit/secrets.env` at runtime. The Nix store is world-readable, so hardcoding secrets there would be a security issue.
+- **Dual push support**: Pushes via HTTPS (GitHub token) or SSH, configurable via environment variable — makes credential rotation easy without a rebuild.
+- **Resilient loop**: Push failures are logged but do not crash the service. systemd restarts on hard failures with a 10-second backoff.
+
+---
+
+## Applying Changes
+
 ```bash
+# Rebuild and switch (alias defined in dotfiles/zsh/.zshrc)
 nr
+
+# Or explicitly:
+sudo nixos-rebuild switch --flake ~/NixOSenv#nixos
 ```
-*Note: `nr` is a custom alias defined in `home.nix` that commits your changes and runs `nixos-rebuild switch`.*
 
 ---
 
-## 🤖 Jarvis Integration
+## Previous AI Integration
 
-Jarvis is integrated into your Nix system as a background service.
-
-- **Dashboard**: Run `jarvis dashboard` to see system health and AI activity in high-contrast.
-- **Learning**: `jarvis learn <url> --category my-topic` to ingest knowledge.
-- **Autocomplete**: Use `<Tab>` with any `jarvis` command to use the fuzzy `fzf` selector for subcommands and database entries.
-
-### Manual Data Backups
-Large files (indexes and results) are **NOT** in the Nix repository. See the **[Backup Guide](file:///THE_VAULT/jarvis/docs/BACKUP_GUIDE.md)** for detailed locations of:
-- Hierarchical RAG Database
-- Episodic Indexed Files
-- Episodic Memory Logs
-
----
-
-## 🚀 Common Maintenance Commands
-
-- `nr`: Rebuild and switch to the latest configuration.
-- `lysander-git`: Configure local git for Lysandercodes profile.
-- `hb` / `hn` / `hp`: Hugo blog build, new post, and deploy shortcuts.
-
----
-## 📚 Git Repository Management
-
-The NixOS configuration repository and the Jarvis codebase are version‑controlled with Git.
-
-### NixOS Configuration (root of the repository)
-
-- The top‑level directory (`/home/qwerty/NixOSenv`) is a regular Git repository.
-- Use the provided `lysander-git` alias for common actions (adds, commits, pushes) with your Lysandercodes profile.
-- Example workflow:
-  ```bash
-  lysander-git status
-  lysander-git add .
-  lysander-git commit -m "Update NixOS config"
-  lysander-git push
-  ```
-
-### Jarvis Sub‑repository
-
-The `Jarvis/` directory is a separate Git repository that lives inside the NixOS repo.
-
-- It has its own remote and history, allowing independent development.
-- Typical commands:
-  ```bash
-  cd Jarvis
-  git status
-  git add .
-  git commit -m "Improve Jarvis feature"
-  git push origin main
-  ```
-- When making changes to both repositories, commit them separately to keep histories clean.
-
-### Keeping the two repos in sync
-
-- After committing changes in `Jarvis/`, return to the root and commit the updated submodule pointer (if you use submodules) or simply commit the updated `Jarvis/` directory if it’s a regular folder.
-- Example:
-  ```bash
-  cd /home/qwerty/NixOSenv
-  lysander-git add Jarvis
-  lysander-git commit -m "Update Jarvis subdirectory"
-  lysander-git push
-  ```
-
-Following these steps ensures a clean history for both the NixOS configuration and the Jarvis codebase.
-
-*Created and maintained by Jarvis with an Antigravity-like AI layer.*
+This repo previously included [Jarvis](https://github.com/m-amir-gomaa/Jarvis) — a local AI assistant with a hierarchical RAG database, episodic memory, and background learning services, all managed as Nix modules. It was deprecated in favour of using hosted AI APIs directly. The repository is archived and left public as a reference.
