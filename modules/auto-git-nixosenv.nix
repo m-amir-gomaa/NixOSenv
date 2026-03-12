@@ -25,7 +25,7 @@
 #   AUTOCOMMIT_BASE_URL  (optional)  override API base URL (e.g. for a proxy)
 #   AUTOCOMMIT_MODEL     (optional)  model name; default "gpt-4o"
 #   AUTOCOMMIT_PUSH      (optional)  "true"/"false"; default true
-#   AUTOCOMMIT_INTERVAL  (optional)  seconds between checks; for this repository 300 (5 min)
+#   AUTOCOMMIT_INTERVAL  (optional)  seconds between checks; default 300 (5 min)
 #   GITHUB_TOKEN         (optional)  if set, push uses HTTPS with this token
 #                                    instead of SSH. Add to secrets.env:
 #                                      GITHUB_TOKEN=ghp_...
@@ -109,8 +109,8 @@ in
         CONFIG_DIR=$(mktemp -d)
         trap 'rm -rf "$CONFIG_DIR"' EXIT
 
-        # ''${VAR:-default} is Nix-escaped bash parameter expansion.
-        # The extra '\' escapes the $ so Nix doesn\'t try to interpolate it.
+        # '\'$\{VAR:-default} is Nix-escaped bash parameter expansion.
+        # The extra '\'  # escapes the $ so Nix doesn't try to interpolate it.
         # At runtime this reads as: use $VAR if set, otherwise use the default.
         BASE_URL=''${AUTOCOMMIT_BASE_URL:-"https://api.openai.com/v1/"}
         MODEL=''${AUTOCOMMIT_MODEL:-"gpt-4o"}
@@ -121,14 +121,14 @@ in
         INTERVAL=''${AUTOCOMMIT_INTERVAL:-"300"}
 
         cat > "$CONFIG_DIR/config.yaml" <<EOF
-              repo_path: "${repoDir}"
-              interval_seconds: $INTERVAL
-              api_key: "$AUTOCOMMIT_API_KEY"
-              base_url: "$BASE_URL"
-              push: $PUSH
-              model: "$MODEL"
-              timeout: 30
-              EOF
+            repo_path: "${repoDir}"
+            interval_seconds: $INTERVAL
+            api_key: "$AUTOCOMMIT_API_KEY"
+            base_url: "$BASE_URL"
+            push: $PUSH
+            model: "$MODEL"
+            timeout: 30
+            EOF
 
         # Main loop: check for meaningful changes, then commit and push.
         while true; do
