@@ -38,7 +38,7 @@ EOF
 }
 
 # Default values
-TARGET_DIR="."
+TARGET_DIR=""
 DRY_RUN=false
 FORCE=false
 RECURSIVE=false
@@ -66,6 +66,28 @@ while [[ $# -gt 0 ]]; do
             RECURSIVE=true
             shift
             ;;
+        --completion)
+            # This flag outputs a Zsh completion script
+            cat << 'EOF'
+_clean_mineru_completion() {
+    local -a opts
+    opts=(
+        "-d" "--dry-run"
+        "-f" "--force"
+        "-r" "--recursive"
+        "-h" "--help"
+        "-v" "--version"
+    )
+    if [[ $PREFIX == -* ]]; then
+        _describe 'options' opts
+    else
+        _files -/
+    fi
+}
+compdef _clean_mineru_completion clean-mineru
+EOF
+            exit 0
+            ;;
         -*)
             echo -e "${RED}Error: Unknown option $1${NC}"
             show_help
@@ -77,6 +99,21 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# Smart FZF selection
+if [ -z "$TARGET_DIR" ]; then
+    if command -v fzf >/dev/null 2>&1; then
+        echo -e "${BLUE}No directory specified. Launching fzf for selection...${NC}"
+        # Only show directories that might contain MinerU output (or all dirs)
+        TARGET_DIR=$(find . -maxdepth 3 -type d 2>/dev/null | fzf --prompt="Select MinerU output directory: " --height=40% --reverse)
+        if [ -z "$TARGET_DIR" ]; then
+            echo -e "${YELLOW}Selection cancelled.${NC}"
+            exit 0
+        fi
+    else
+        TARGET_DIR="."
+    fi
+fi
 
 if [ ! -d "$TARGET_DIR" ]; then
     echo -e "${RED}Error: Directory '$TARGET_DIR' does not exist.${NC}"

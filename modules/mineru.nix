@@ -398,12 +398,29 @@ let
     exec ${fhsSetupEnv}/bin/mineru-fhs-setup
   '';
 
+  # ── clean-mineru utility ───────────────────────────────────────────────────
+  cleanMineru = pkgs.stdenv.mkDerivation {
+    name = "clean-mineru";
+    src = ../scripts; # Assuming clean-mineru.sh is in NixOSenv/scripts
+    installPhase = ''
+      mkdir -p $out/bin
+      cp clean-mineru.sh $out/bin/clean-mineru
+      chmod +x $out/bin/clean-mineru
+      
+      # Generate Zsh completions
+      mkdir -p $out/share/zsh/site-functions
+      $out/bin/clean-mineru --completion > $out/share/zsh/site-functions/_clean-mineru
+    '';
+  };
+
 in
 {
   # ── expose both binaries system-wide ──────────────────────────────────────
   environment.systemPackages = [
     mineruBin
     mineruSetup
+    cleanMineru
+    pkgs.fzf # Ensure fzf is available for the script
   ];
 
   # ── persistent venv directory ─────────────────────────────────────────────
