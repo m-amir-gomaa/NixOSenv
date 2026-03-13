@@ -52,6 +52,8 @@
       marksman # Markdown (go-to-definition for links)
       rust-analyzer # Rust
       taplo # TOML
+      harper # Grammar / prose linter LSP (binary: harper-ls)
+      markdown-oxide # Markdown LSP with Obsidian-style backlinks
 
       # ── Formatters ───────────────────────────────────────────────────────
       # conform.nvim (or null-ls) calls these directly; they are NOT plugins.
@@ -83,6 +85,13 @@
 
       # ── Other tools Neovim plugins shell out to ───────────────────────────
       icu # Unicode data library (required by some LSPs)
+
+      # ── Snacks.nvim optional tools ────────────────────────────────────────
+      lazygit # Snacks.lazygit integration
+      ghostscript # Snacks.image: render PDF files (gs)
+      tectonic # Snacks.image: render LaTeX math expressions
+      mermaid-cli # Snacks.image: render Mermaid diagrams (mmdc)
+      trash-cli # Snacks.explorer: send deleted files to trash instead of permanent delete
     ];
   };
 
