@@ -85,6 +85,7 @@
 
       # ── Other tools Neovim plugins shell out to ───────────────────────────
       icu # Unicode data library (required by some LSPs)
+      tree-sitter # CLI needed to compile grammars like latex via :TSInstall
 
       # ── Snacks.nvim optional tools ────────────────────────────────────────
       lazygit # Snacks.lazygit integration
