@@ -75,14 +75,21 @@ while [[ $# -gt 0 ]]; do
             # This block outputs a Zsh completion script that Nix can use to
             # provide tab-completion for flags and directories.
             cat << 'EOF'
+#compdef clean-mineru
+
 _clean_mineru_completion() {
     local -a opts
     opts=(
-        "-d" "--dry-run"
-        "-f" "--force"
-        "-r" "--recursive"
-        "-h" "--help"
-        "-v" "--version"
+        "-d:Show what would be removed without actually deleting"
+        "--dry-run:Show what would be removed without actually deleting"
+        "-f:Force removal without confirmation"
+        "--force:Force removal without confirmation"
+        "-r:Recursively clean subdirectories"
+        "--recursive:Recursively clean subdirectories"
+        "-h:Show this help message and exit"
+        "--help:Show this help message and exit"
+        "-v:Show version information"
+        "--version:Show version information"
     )
     if [[ $PREFIX == -* ]]; then
         _describe 'options' opts
@@ -90,7 +97,8 @@ _clean_mineru_completion() {
         _files -/
     fi
 }
-compdef _clean_mineru_completion clean-mineru
+
+_clean_mineru_completion "$@"
 EOF
             exit 0
             ;;

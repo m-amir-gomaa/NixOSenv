@@ -27,33 +27,17 @@
 #   require a rebuild.
 # ────────────────────────────────────────────────────────────────────────────
 { config, pkgs, lib, ... }:
-let
-  # Parse lazy-lock.json to ensure Nix knows what Lazy is doing.
-  # This creates a "Single Point of Truth" between your system and your editor.
-  lazyLockPath = "/home/qwerty/kickstart.nvim/lazy-lock.json";
-  lazyLock = builtins.fromJSON (builtins.readFile lazyLockPath);
-
-  # Helper to get a commit for a specific plugin
-  getCommit = name: if builtins.hasAttr name lazyLock then lazyLock.${name}.commit else "unknown";
-
-  # Critical Plugin Validation
-  # If you accidentally delete a core plugin from your config, Nix will now
-  # catch it during rebuild rather than you finding out when Neovim crashes.
-  requiredPlugins = [ "blink.cmp" "nvim-lspconfig" "conform.nvim" ];
-  missingPlugins = builtins.filter (p: !builtins.hasAttr p lazyLock) requiredPlugins;
-in
 {
-  # Safety Check: If a required plugin is missing from lazy-lock.json, abort the build.
-  assertions = [
-    {
-      assertion = missingPlugins == [ ];
-      message = "Neovim Sync Error: The following critical plugins are missing from your lazy-lock.json: ${lib.concatStringsSep ", " missingPlugins}. Did you forget to run :Lazy install?";
-    }
-  ];
+  # NOTE: The lazy-lock.json validator was removed because `builtins.readFile`
+  # on an absolute `/home/...` path is forbidden in Nix's pure evaluation mode.
+  # To re-enable it, the file would need to be referenced as a flake input.
 
   programs.neovim = {
     enable = true;
-    package = pkgs.neovim-nightly; # Use the high-performance nightly build from our overlay
+    # pkgs.neovim from nixpkgs-unstable is already very recent (0.10+).
+    # The neovim-nightly-overlay is kept in flake.nix for future use but
+    # pkgs.neovim-nightly was removed here to avoid overlay resolution issues.
+    package = pkgs.neovim;
     defaultEditor = true; # sets $EDITOR=nvim and $VISUAL=nvim
     viAlias = true; # `vi` → nvim
     vimAlias = true; # `vim` → nvim
@@ -107,6 +91,9 @@ in
 
       # ── Other tools Neovim plugins shell out to ───────────────────────────
       icu # Unicode data library (required by some LSPs)
+      # markdown-toc: not in nixpkgs; invoked via `npx --yes markdown-toc` from Lua
+      nodejs # provides `npx` for running markdown-toc and other npm tools
+      imagemagick # For image processing (img-clip etc.)
     ];
   };
 
