@@ -163,7 +163,6 @@
 
     shellAliases = {
       # Custom Aliases
-      nvchad = "NVIM_APPNAME=nvchad nvim";
       n = "nvim";
       lysander-git = "git config --local user.name \"Lysandercodes\" && git config --local user.email \"lysander2006@proton.me\"";
       showgitcreds = "git config --list";
@@ -208,6 +207,7 @@
       export PATH="/home/qwerty/scdl-env/bin/":$PATH
       export PATH=$PATH:/usr/local/go/bin
       export PATH=$PATH:/home/qwerty/go/bin
+      export PATH="$HOME/NixOSenv/scripts/:$PATH"
 
       # VCPKG
       export VCPKG_ROOT=/home/lysander/vcpkg
