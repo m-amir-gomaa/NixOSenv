@@ -26,8 +26,31 @@
 #   without a Nix rebuild — only changes to THIS file (adding/removing packages)
 #   require a rebuild.
 # ────────────────────────────────────────────────────────────────────────────
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
+let
+  # Parse lazy-lock.json to ensure Nix knows what Lazy is doing.
+  # This creates a "Single Point of Truth" between your system and your editor.
+  lazyLockPath = "/home/qwerty/kickstart.nvim/lazy-lock.json";
+  lazyLock = builtins.fromJSON (builtins.readFile lazyLockPath);
+
+  # Helper to get a commit for a specific plugin
+  getCommit = name: if builtins.hasAttr name lazyLock then lazyLock.${name}.commit else "unknown";
+
+  # Critical Plugin Validation
+  # If you accidentally delete a core plugin from your config, Nix will now
+  # catch it during rebuild rather than you finding out when Neovim crashes.
+  requiredPlugins = [ "blink.cmp" "nvim-lspconfig" "conform.nvim" ];
+  missingPlugins = builtins.filter (p: !builtins.hasAttr p lazyLock) requiredPlugins;
+in
 {
+  # Safety Check: If a required plugin is missing from lazy-lock.json, abort the build.
+  assertions = [
+    {
+      assertion = missingPlugins == [ ];
+      message = "Neovim Sync Error: The following critical plugins are missing from your lazy-lock.json: ${lib.concatStringsSep ", " missingPlugins}. Did you forget to run :Lazy install?";
+    }
+  ];
+
   programs.neovim = {
     enable = true;
     package = pkgs.neovim-nightly; # Use the high-performance nightly build from our overlay
