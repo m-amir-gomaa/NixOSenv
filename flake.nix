@@ -51,9 +51,6 @@
       url = "github:jacopone/antigravity-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # ── neovim-nightly-overlay — Bleeding edge Neovim ─────────────────────────
-    # Provides the latest Neovim nightly builds and optimized treesitter parsers.
-    neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
 
 
 
@@ -71,7 +68,6 @@
       antigravity-nix,
       # german-pronunciation-cli,  # uncomment when flake.nix is added to the repo
       home-manager,
-      neovim-nightly-overlay,
       ...
     }:
     {
@@ -110,8 +106,6 @@
               nixpkgs.overlays = [
                 # fenix.overlays.default adds pkgs.fenix.{complete,minimal,stable,…} attrs
                 fenix.overlays.default
-                # neovim-nightly-overlay adds pkgs.neovim-nightly
-                neovim-nightly-overlay.overlays.default
                 (final: prev: {
                   less = prev.less.overrideAttrs (old: {
                     postInstall = ''

@@ -26,18 +26,10 @@
 #   without a Nix rebuild — only changes to THIS file (adding/removing packages)
 #   require a rebuild.
 # ────────────────────────────────────────────────────────────────────────────
-{ config, pkgs, lib, ... }:
+{ config, pkgs, ... }:
 {
-  # NOTE: The lazy-lock.json validator was removed because `builtins.readFile`
-  # on an absolute `/home/...` path is forbidden in Nix's pure evaluation mode.
-  # To re-enable it, the file would need to be referenced as a flake input.
-
   programs.neovim = {
     enable = true;
-    # pkgs.neovim from nixpkgs-unstable is already very recent (0.10+).
-    # The neovim-nightly-overlay is kept in flake.nix for future use but
-    # pkgs.neovim-nightly was removed here to avoid overlay resolution issues.
-    package = pkgs.neovim;
     defaultEditor = true; # sets $EDITOR=nvim and $VISUAL=nvim
     viAlias = true; # `vi` → nvim
     vimAlias = true; # `vim` → nvim
@@ -91,9 +83,6 @@
 
       # ── Other tools Neovim plugins shell out to ───────────────────────────
       icu # Unicode data library (required by some LSPs)
-      # markdown-toc: not in nixpkgs; invoked via `npx --yes markdown-toc` from Lua
-      nodejs # provides `npx` for running markdown-toc and other npm tools
-      imagemagick # For image processing (img-clip etc.)
     ];
   };
 
