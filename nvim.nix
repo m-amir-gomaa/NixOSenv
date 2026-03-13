@@ -30,6 +30,7 @@
 {
   programs.neovim = {
     enable = true;
+    package = pkgs.neovim-nightly; # Use the high-performance nightly build from our overlay
     defaultEditor = true; # sets $EDITOR=nvim and $VISUAL=nvim
     viAlias = true; # `vi` → nvim
     vimAlias = true; # `vim` → nvim
