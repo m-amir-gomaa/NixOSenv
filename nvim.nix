@@ -97,6 +97,7 @@
       mermaid-cli # Snacks.image: render Mermaid diagrams (mmdc)
       plantuml # Snacks.image: render PlantUML diagrams (puml)
       graphviz # Required for many PlantUML diagram types
+      jdk # Required by PlantUML
       trash-cli # Snacks.explorer: send deleted files to trash instead of permanent delete
     ];
   };
