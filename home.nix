@@ -207,7 +207,6 @@
       export PATH="/home/qwerty/scdl-env/bin/":$PATH
       export PATH=$PATH:/usr/local/go/bin
       export PATH=$PATH:/home/qwerty/go/bin
-      export PATH="$HOME/NixOSenv/scripts/:$PATH"
 
       # VCPKG
       export VCPKG_ROOT=/home/lysander/vcpkg
