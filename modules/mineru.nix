@@ -407,6 +407,9 @@ let
       cp clean-mineru.sh $out/bin/clean-mineru
       chmod +x $out/bin/clean-mineru
       
+      # Fix the shebang so it can be executed inside the Nix sandbox
+      patchShebangs $out/bin/clean-mineru
+      
       # Generate Zsh completions
       mkdir -p $out/share/zsh/site-functions
       $out/bin/clean-mineru --completion > $out/share/zsh/site-functions/_clean-mineru
