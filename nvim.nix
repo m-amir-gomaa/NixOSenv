@@ -53,6 +53,7 @@
       rust-analyzer # Rust
       taplo # TOML
       markdown-oxide # Markdown LSP with Obsidian-style backlinks
+      harper # Prose grammar checker
 
       # ── Formatters ───────────────────────────────────────────────────────
       # conform.nvim (or null-ls) calls these directly; they are NOT plugins.
