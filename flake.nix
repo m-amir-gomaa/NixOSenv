@@ -52,8 +52,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-
-
     # ── german-pronunciation-cli — Rust-based German pronunciation trainer ──────
     # Replaces the deprecated aussprachetrainer flake.
     # CLI tool (gp): IPA transcription, Edge TTS, Whisper STT scoring,
@@ -145,8 +143,6 @@
                   "rustfmt"
                   "rust-docs"
                 ])
-                # rust-analyzer: LSP for Rust; stable build to match the stable toolchain.
-                pkgs.fenix.stable.rust-analyzer # CHANGED: rust-analyzer-nightly → stable
                 pkgs.hugo
               ];
             }
