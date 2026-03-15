@@ -183,13 +183,24 @@
       hb = "~/blog/scripts/build_preview.sh";
       hn = "~/blog/scripts/create_post.sh";
       hp = "~/blog/scripts/deploy.sh";
-      cc = "cat ~/NixOSenv/configuration.nix | xclip -sel c";
-      cf = "cat ~/NixOSenv/flake.nix | xclip -sel c";
-      cb = "cat ~/buffer.md | xclip -sel c";
       hr = "hyprctl reload";
       o = "xdg-open";
       push-lysander = "cd ~/NixOSenv && lysander-git && lysandergitsshcommand";
       fmd = "firefox viewer.html";
+
+      # Rust/Cargo Aliases
+      c = "cargo";
+      cr = "cargo run";
+      cb = "cargo build";
+      ct = "cargo test";
+      cc = "cargo check";
+      cl = "cargo clippy";
+      cf = "cargo fmt";
+      cn = "cargo new";
+      ca = "cargo add";
+      cbr = "cargo build --release";
+      cw = "cargo watch";
+      cdoc = "cargo doc --open";
     };
 
     initContent = ''
