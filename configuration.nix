@@ -597,4 +597,12 @@
     RuntimeMaxUse=100M
   '';
   programs.browserpass.enable = true; # browser integration
+  # ── Syncthing ─────────────────────────────────────────────────────────────
+  services.syncthing = {
+    enable = true;
+    user = "qwerty";
+    dataDir = "/home/qwerty"; # Default base for relative paths
+    configDir = "/home/qwerty/.config/syncthing";
+    openDefaultPorts = true;
+  };
 }
