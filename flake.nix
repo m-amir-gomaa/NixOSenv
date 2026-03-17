@@ -101,6 +101,7 @@
                 name = "antigravity";
                 paths = [ antigravity-nix.packages.x86_64-linux.default ];
                 postBuild = ''
+                  rm $out/bin/antigravity
                   sed \
                     -e 's|--ro-bind-try /run/opengl-driver /run/opengl-driver|--ro-bind-try $(readlink -f /run/opengl-driver) /run/opengl-driver|g' \
                     -e 's|--ro-bind-try /run/opengl-driver-32 /run/opengl-driver-32|--ro-bind-try $(readlink -f /run/opengl-driver-32) /run/opengl-driver-32|g' \
