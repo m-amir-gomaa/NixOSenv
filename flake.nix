@@ -103,8 +103,8 @@
                 postBuild = ''
                   rm $out/bin/antigravity
                   sed \
-                    -e 's|--ro-bind-try /run/opengl-driver /run/opengl-driver|--ro-bind-try $(readlink -f /run/opengl-driver) /run/opengl-driver|g' \
-                    -e 's|--ro-bind-try /run/opengl-driver-32 /run/opengl-driver-32|--ro-bind-try $(readlink -f /run/opengl-driver-32) /run/opengl-driver-32|g' \
+                    -e '/--ro-bind-try \/run\/opengl-driver /d' \
+                    -e '/--ro-bind-try \/run\/opengl-driver-32 /d' \
                     ${antigravity-nix.packages.x86_64-linux.default}/bin/antigravity \
                     > $out/bin/antigravity
                   chmod +x $out/bin/antigravity
