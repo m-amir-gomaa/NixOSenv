@@ -584,7 +584,9 @@
 
   nix.gc.automatic = true;
   nix.gc.dates = "daily";
-  nix.gc.options = "--delete-older-than 10d";
+  nix.gc.options = "--delete-older-than 14d";
+  nix.settings.keep-outputs = true; # keep build outputs of installed packages
+  nix.settings.keep-derivations = true; # keep .drv files (needed for nix develop etc.)
   nix.settings.auto-optimise-store = true;
 
   programs.virt-manager.enable = true;
