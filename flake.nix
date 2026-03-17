@@ -87,13 +87,31 @@
           # ── Antigravity (Cursor IDE) ─────────────────────────────────────────
           # Added as an inline module (not via overlay) so the package is in
           # environment.systemPackages without scoping issues.
-          {
+          #
+          # bwrap 0.11.0 regression: --ro-bind-try now fails fatally when the
+          # source path is a symlink (even with -try).  /run/opengl-driver is a
+          # symlink managed by NixOS, so the upstream wrapper breaks.
+          # Fix: symlinkJoin preserves all other package outputs (desktop entry,
+          # icons, …) and postBuild overwrites only the launcher script, patching
+          # the two bind-mount lines to resolve symlinks at runtime via readlink.
+          ({ pkgs, ... }: {
             nixpkgs.config.allowUnfree = true;
             environment.systemPackages = [
-              antigravity-nix.packages.x86_64-linux.default
+              (pkgs.symlinkJoin {
+                name = "antigravity";
+                paths = [ antigravity-nix.packages.x86_64-linux.default ];
+                postBuild = ''
+                  sed \
+                    -e 's|--ro-bind-try /run/opengl-driver /run/opengl-driver|--ro-bind-try $(readlink -f /run/opengl-driver) /run/opengl-driver|g' \
+                    -e 's|--ro-bind-try /run/opengl-driver-32 /run/opengl-driver-32|--ro-bind-try $(readlink -f /run/opengl-driver-32) /run/opengl-driver-32|g' \
+                    ${antigravity-nix.packages.x86_64-linux.default}/bin/antigravity \
+                    > $out/bin/antigravity
+                  chmod +x $out/bin/antigravity
+                '';
+              })
               # german-pronunciation-cli.packages.x86_64-linux.default  # uncomment when flake.nix is added to the repo
             ];
-          }
+          })
           # ── Overlays: Fenix Rust + autocommit + pinned Hugo ───────────────────
           # An overlay is a function (final: prev: { … }) that extends or overrides
           # the nixpkgs package set.  `final` is the fully-resolved set (use for
