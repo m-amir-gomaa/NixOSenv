@@ -253,15 +253,7 @@
   };
 
   # ── Syncthing ─────────────────────────────────────────────────────────────
-  # Syncthing is a peer-to-peer file synchronisation daemon.  Home Manager
-  # enables it as a systemd user service; it starts automatically on login.
-  # Config and database are kept in ~/.config/syncthing/ (not the default
-  # ~/.local/share/syncthing/) so they live alongside other dotfiles.
-  services.syncthing = {
-    enable = true;
-    extraOptions = [
-      "--config=/home/qwerty/.config/syncthing"
-      "--data=/home/qwerty/.config/syncthing"
-    ];
-  };
+  # Note: Syncthing is now managed at the system level in configuration.nix
+  # to ensure proper firewall port management.
+  services.syncthing.enable = false;
 }
