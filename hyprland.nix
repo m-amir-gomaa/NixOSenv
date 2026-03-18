@@ -116,7 +116,7 @@
           "windowsOut, 1, 4,  easeIn,  slide"
           "border,     1, 10, default"
           "fade,       1, 5,  default"
-          "workspaces, 1, 4,  easeOut, slidevert"
+          "workspaces, 0, 1,  default"
         ];
       };
 
