@@ -325,6 +325,7 @@
     python313Packages.plyer
     python313Packages.pyinstaller
     python313Packages.requests
+    python313Packages.pyyaml  # Required by Learning OS: inject-metadata.sh
     sqlite
 
     # Qt6
@@ -404,6 +405,14 @@
     devenv
     cachix
   ];
+
+  # ── Learning OS — Script PATH ─────────────────────────────────────────────
+  # Makes ~/Learning/bin scripts (book-progress, book-cleanup, extraction-watchdog,
+  # extract-book.sh, split-chapters.py, anki-export.py, pdf-pages.py) available
+  # system-wide without needing absolute paths.
+  environment.sessionVariables = {
+    PATH = [ "$HOME/Learning/bin" ];
+  };
 
   # ── Fonts ─────────────────────────────────────────────────────────────────
   fonts.packages = with pkgs; [
