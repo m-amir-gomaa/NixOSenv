@@ -412,6 +412,7 @@
   # system-wide without needing absolute paths.
   environment.sessionVariables = {
     PATH = [ "$HOME/Learning/bin" ];
+    MANPATH = [ "$HOME/Learning/man" ];
   };
 
   # ── Fonts ─────────────────────────────────────────────────────────────────
