@@ -164,6 +164,7 @@
     shellAliases = {
       # Custom Aliases
       book-progress = "~/Learning/bin/book-progress";
+      book-cleanup = "~/Learning/bin/book-cleanup";
       n = "nvim";
       lysander-git = "git config --local user.name \"Lysandercodes\" && git config --local user.email \"lysander2006@proton.me\"";
       showgitcreds = "git config --list";
