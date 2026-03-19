@@ -15,6 +15,9 @@ export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="powerlevel10k/powerlevel10k"
 plugins=(sudo git zsh-syntax-highlighting colored-man-pages fzf-zsh-plugin fzf-tab)
 
+# Add custom completions to fpath before compinit initializes
+fpath=($HOME/NixOSenv/dotfiles/zsh/completions $fpath)
+
 source $ZSH/oh-my-zsh.sh
 
 # To customize prompt, run p10k configure or edit ~/.p10k.zsh.
