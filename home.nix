@@ -152,6 +152,10 @@
   programs.zsh = {
     enable = true;
     enableCompletion = true;
+    initExtraFirst = ''
+      # Add custom completions to fpath before compinit executes
+      fpath=($HOME/NixOSenv/dotfiles/zsh/completions $fpath)
+    '';
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
 
@@ -220,6 +224,7 @@
       export PATH="/home/qwerty/scdl-env/bin/":$PATH
       export PATH=$PATH:/usr/local/go/bin
       export PATH=$PATH:/home/qwerty/go/bin
+      export PATH=$HOME/Learning/bin:$PATH
 
       # VCPKG
       export VCPKG_ROOT=/home/lysander/vcpkg
