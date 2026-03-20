@@ -184,7 +184,8 @@
       nr = "cd ~qwerty/NixOSenv && lysander-git && git -C ~/NixOSenv add . && sudo nixos-rebuild switch --flake ~/NixOSenv#nixos";
       g = "cd ~/Downloads/library/GermanMechatronics/ && nvim";
       t = "cd ~/text/ && nvim";
-      scdl = "yt-dlp -x --audio-format mp3 --audio-quality 0 --embed-thumbnail --embed-metadata --add-metadata \"https://soundcloud.com/luke-lysander/likes\"";
+      # scdl = "yt-dlp -x --audio-format mp3 --audio-quality 0 --embed-thumbnail --embed-metadata --add-metadata \"https://soundcloud.com/luke-lysander/likes\"";
+      scdl = "yt-dlp --cookies-from-browser firefox --playlist-end 1000 -x --audio-format mp3 --audio-quality 0 --embed-thumbnail --embed-metadata --add-metadata " "https://soundcloud.com/luke-lysander/likes" "";
       l = "ls -lt --human-readable";
       hb = "~/blog/scripts/build_preview.sh";
       hn = "~/blog/scripts/create_post.sh";
