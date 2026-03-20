@@ -312,6 +312,63 @@
     qpdf
     mupdf # mutool
     pdftk
+
+    # Dark mode theming
+    adw-gtk3 # GTK3 port of Adwaita (dark variant)
+    adwaita-icon-theme # symbolic icons for GTK apps
+    adwaita-qt # Qt style matching Adwaita Dark
+    libsForQt5.qtstyleplugin-kvantum # Qt5 Kvantum engine
+    kdePackages.qtstyleplugin-kvantum # Qt6 Kvantum engine
+
+    # Python
+    python313
+    python313Packages.pip
+    python313Packages.pyqt6
+    python313Packages.matplotlib
+    python313Packages.pyqtgraph
+    python313Packages.plyer
+    python313Packages.pyinstaller
+    python313Packages.requests
+    python313Packages.pyyaml  # Required by Learning OS: inject-metadata.sh
+    sqlite
+
+    # Qt6
+    qt6.qtbase
+    qt6.qtwayland
+
+    # Graphics
+    libGL
+    mesa
+    mesa-demos
+
+    # Development
+    go
+    cargo
+    nodejs_24
+    nodePackages.prettier
+    prettierd
+    lua
+    luajit
+    lua-language-server
+    stylua
+    nil
+    shfmt
+    gofumpt
+    inotify-tools
+    imagemagick
+
+    # Apps & utilities
+    discord
+    google-chrome
+    tor-browser
+    wasistlos
+    materialgram
+    localsend
+    yt-dlp
+    ffmpeg
+    wireshark
+    dig
+    encfs
     pdfarranger
     kdePackages.okular
     kdePackages.breeze-icons
