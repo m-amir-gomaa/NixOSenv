@@ -308,7 +308,7 @@
     gnome-calculator
     mpv
     celluloid
-    poppler_utils # pdfinfo, pdftotext
+    poppler-utils # pdfinfo, pdftotext
     qpdf
     mupdf # mutool
     pdftk
