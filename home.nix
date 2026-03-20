@@ -152,10 +152,6 @@
   programs.zsh = {
     enable = true;
     enableCompletion = true;
-    initExtraFirst = ''
-      # Add custom completions to fpath before compinit executes
-      fpath=($HOME/NixOSenv/dotfiles/zsh/completions $fpath)
-    '';
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
 
@@ -210,10 +206,13 @@
       cdoc = "cargo doc --open";
     };
 
-    initContent = ''
+    initContent = lib.mkBefore ''
+      # Add custom completions to fpath before compinit executes
+      fpath=($HOME/NixOSenv/dotfiles/zsh/completions $fpath)
+
       # Powerlevel10k instant prompt
-      if [[ -r "${config.xdg.cacheHome}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
-        source "${config.xdg.cacheHome}/p10k-instant-prompt-''${(%):-%n}.zsh"
+      if [[ -r "${config.xdg.cacheHome}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+        source "${config.xdg.cacheHome}/p10k-instant-prompt-${(%):-%n}.zsh"
       fi
 
       # Source p10k config
