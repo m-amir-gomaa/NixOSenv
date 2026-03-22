@@ -321,17 +321,18 @@
     kdePackages.qtstyleplugin-kvantum # Qt6 Kvantum engine
 
     # Python
-    python313
-    python313Packages.pip
-    python313Packages.pyqt6
-    python313Packages.matplotlib
-    python313Packages.pyqtgraph
-    python313Packages.plyer
-    python313Packages.pyinstaller
-    python313Packages.requests
-    python313Packages.pyyaml  # Required by Learning OS: inject-metadata.sh
-    python313Packages.openai
-    python313Packages.python-dotenv
+    (python313.withPackages (ps: with ps; [
+      pip
+      pyqt6
+      matplotlib
+      pyqtgraph
+      plyer
+      pyinstaller
+      requests
+      pyyaml
+      openai
+      python-dotenv
+    ]))
     sqlite
 
     # Qt6
