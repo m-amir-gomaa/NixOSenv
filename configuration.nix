@@ -415,6 +415,7 @@
     cachix
   ];
   services.gvfs.enable = true;
+  services.udisks2.enable = true;
   # ── Learning OS — Script PATH ─────────────────────────────────────────────
   # Makes ~/Learning/bin scripts (book-progress, book-cleanup, extraction-watchdog,
   # extract-book.sh, split-chapters.py, anki-export.py, pdf-pages.py) available
