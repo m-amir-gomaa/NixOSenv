@@ -330,6 +330,8 @@
     python313Packages.pyinstaller
     python313Packages.requests
     python313Packages.pyyaml  # Required by Learning OS: inject-metadata.sh
+    python313Packages.openai
+    python313Packages.python-dotenv
     sqlite
 
     # Qt6
