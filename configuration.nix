@@ -240,7 +240,6 @@
   users.defaultUserShell = pkgs.zsh;
   programs.firefox.enable = true;
   programs.dconf.enable = true;
-  programs.adb.enable = true; # Required for Android udev rules
   qt.enable = true;
   nixpkgs.config.allowUnfree = true;
 
@@ -265,7 +264,7 @@
     cmake
     fd
     ripgrep
-    androidenv.androidPkgs.platform-tools
+    android-tools
     syncthing
     unixtools.xxd
     pandoc
