@@ -240,6 +240,7 @@
   users.defaultUserShell = pkgs.zsh;
   programs.firefox.enable = true;
   programs.dconf.enable = true;
+  programs.adb.enable = true; # Required for Android udev rules
   qt.enable = true;
   nixpkgs.config.allowUnfree = true;
 
@@ -303,6 +304,9 @@
     # Files & documents
     nautilus
     gvfs
+    libmtp # Android MTP support
+    libimobiledevice # iOS support
+    ifuse # iOS mount support
     evince
     totem
     gnome-calculator
@@ -416,6 +420,7 @@
   ];
   services.gvfs.enable = true;
   services.udisks2.enable = true;
+  services.devmon.enable = true;
   # ── Learning OS — Script PATH ─────────────────────────────────────────────
   # Makes ~/Learning/bin scripts (book-progress, book-cleanup, extraction-watchdog,
   # extract-book.sh, split-chapters.py, anki-export.py, pdf-pages.py) available
