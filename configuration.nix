@@ -321,18 +321,20 @@
     kdePackages.qtstyleplugin-kvantum # Qt6 Kvantum engine
 
     # Python
-    (python313.withPackages (ps: with ps; [
-      pip
-      pyqt6
-      matplotlib
-      pyqtgraph
-      plyer
-      pyinstaller
-      requests
-      pyyaml
-      openai
-      python-dotenv
-    ]))
+    (python313.withPackages (
+      ps: with ps; [
+        pip
+        pyqt6
+        matplotlib
+        pyqtgraph
+        plyer
+        pyinstaller
+        requests
+        pyyaml
+        openai
+        python-dotenv
+      ]
+    ))
     sqlite
 
     # Qt6
@@ -412,7 +414,7 @@
     devenv
     cachix
   ];
-
+  services.gvfs.enable = true;
   # ── Learning OS — Script PATH ─────────────────────────────────────────────
   # Makes ~/Learning/bin scripts (book-progress, book-cleanup, extraction-watchdog,
   # extract-book.sh, split-chapters.py, anki-export.py, pdf-pages.py) available
