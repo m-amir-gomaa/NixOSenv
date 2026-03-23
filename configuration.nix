@@ -33,6 +33,7 @@
     ./cachix.nix
     ./modules/auto-git-nixosenv.nix
     ./modules/mineru.nix
+    ./modules/titan.nix
   ];
 
   # ── Boot ──────────────────────────────────────────────────────────────────
@@ -605,6 +606,8 @@
     binfmt = true;
   };
   programs.nix-ld.enable = true;
+
+  services.titan-gateway.enable = true;
 
   nix.gc.automatic = true;
   nix.gc.dates = "daily";
