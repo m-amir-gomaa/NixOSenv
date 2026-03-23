@@ -89,7 +89,7 @@
       gcc # C compiler for Treesitter parser compilation
       gnumake # Build tool for compiling parsers
       git # Required for fetching parser sources
-      python313Packages.duckduckgo-search # Titan Web Search
+      python313Packages.ddgs # Titan Web Search (formerly duckduckgo-search)
       python313Packages.fastmcp # Titan MCP Framework
 
       # ── Snacks.nvim optional tools ────────────────────────────────────────
