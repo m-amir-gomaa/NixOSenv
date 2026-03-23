@@ -34,6 +34,22 @@
     viAlias = true; # `vi` → nvim
     vimAlias = true; # `vim` → nvim
 
+    # ── Neovim Plugins (Nix-Managed) ─────────────────────────────────────────
+    # We manage some plugins via Nix to ensure binary dependencies (like
+    # Treesitter parsers) are correctly linked on NixOS.
+    plugins = with pkgs.vimPlugins; [
+      (nvim-treesitter.withPlugins (p: [
+        p.norg
+        p.scss
+        p.svelte
+        p.vue
+        # Essential ones to ensure they are available in the Nix store
+        p.markdown
+        p.markdown_inline
+        p.latex
+      ]))
+    ];
+
     # All packages listed here are added to the PATH only while Neovim runs.
     # They are not visible in normal shell sessions.
     extraPackages = with pkgs; [
