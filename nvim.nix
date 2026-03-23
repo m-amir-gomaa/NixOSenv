@@ -39,7 +39,6 @@
     # Treesitter parsers) are correctly linked on NixOS.
     plugins = with pkgs.vimPlugins; [
       (nvim-treesitter.withPlugins (p: [
-        p.norg
         p.scss
         p.svelte
         p.vue
