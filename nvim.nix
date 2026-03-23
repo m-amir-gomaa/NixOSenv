@@ -91,6 +91,7 @@
       git # Required for fetching parser sources
       python313Packages.ddgs # Titan Web Search (formerly duckduckgo-search)
       python313Packages.fastmcp # Titan MCP Framework
+      nodejs_24 # Required for MCPHub (mcp-hub-server)
 
       # ── Snacks.nvim optional tools ────────────────────────────────────────
       lazygit # Snacks.lazygit integration
