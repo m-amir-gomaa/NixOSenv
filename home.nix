@@ -237,6 +237,10 @@
       # Learning OS Binaries
       export PATH=$HOME/Learning/bin:$PATH
 
+      # Titan Ecosystem — Autocompletion & Docs
+      [[ -f "/home/qwerty/TitanGateway/scripts/titan-completion.sh" ]] && source "/home/qwerty/TitanGateway/scripts/titan-completion.sh"
+      export MANPATH="/home/qwerty/TitanGateway/docs/man:$MANPATH"
+
       # VCPKG
       export VCPKG_ROOT=/home/lysander/vcpkg
       export PATH=$VCPKG_ROOT:$PATH
