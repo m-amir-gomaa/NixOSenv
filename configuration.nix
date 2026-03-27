@@ -308,7 +308,6 @@
     libimobiledevice # iOS support
     ifuse # iOS mount support
     evince
-    totem
     gnome-calculator
     mpv
     celluloid
@@ -615,8 +614,6 @@
   nix.gc.automatic = true;
   nix.gc.dates = "daily";
   nix.gc.options = "--delete-older-than 14d";
-  nix.settings.keep-outputs = true; # keep build outputs of installed packages
-  nix.settings.keep-derivations = true; # keep .drv files (needed for nix develop etc.)
   nix.settings.auto-optimise-store = true;
 
   programs.virt-manager.enable = true;
@@ -636,5 +633,15 @@
     dataDir = "/home/qwerty"; # Default base for relative paths
     configDir = "/home/qwerty/.config/syncthing";
     openDefaultPorts = true;
+  };
+  systemd.services.disk-space-alert = {
+    script = ''
+      USAGE=$(df / | awk 'NR==2 {print $5}' | tr -d '%')
+      if [ "$USAGE" -gt 85 ]; then
+        notify-send "Disk Warning" "Root partition at $USAGE%"
+      fi
+    '';
+    serviceConfig.Type = "oneshot";
+    startAt = "daily";
   };
 }
