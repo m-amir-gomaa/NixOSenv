@@ -634,10 +634,17 @@
     configDir = "/home/qwerty/.config/syncthing";
     openDefaultPorts = true;
   };
-  script = ''
-    USAGE=$(df / | awk 'NR==2 {print $5}' | tr -d '%')
-    if [ "$USAGE" -gt 85 ]; then
-      /run/current-system/sw/bin/wall "WARNING: Root partition at $USAGE%"
-    fi
-  '';
+  systemd.services.disk-space-alert = {
+    description = "Warn when root partition exceeds 85%";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = pkgs.writeShellScript "disk-space-alert" ''
+        USAGE=$(${pkgs.coreutils}/bin/df / | ${pkgs.gawk}/bin/awk 'NR==2 {print $5}' | tr -d '%')
+        if [ "$USAGE" -gt 85 ]; then
+          ${pkgs.util-linux}/bin/wall "WARNING: Root partition at $USAGE%"
+        fi
+      '';
+    };
+    startAt = "daily";
+  };
 }
