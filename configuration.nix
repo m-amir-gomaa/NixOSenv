@@ -634,14 +634,10 @@
     configDir = "/home/qwerty/.config/syncthing";
     openDefaultPorts = true;
   };
-  systemd.services.disk-space-alert = {
-    script = ''
-      USAGE=$(df / | awk 'NR==2 {print $5}' | tr -d '%')
-      if [ "$USAGE" -gt 85 ]; then
-        notify-send "Disk Warning" "Root partition at $USAGE%"
-      fi
-    '';
-    serviceConfig.Type = "oneshot";
-    startAt = "daily";
-  };
+  script = ''
+    USAGE=$(df / | awk 'NR==2 {print $5}' | tr -d '%')
+    if [ "$USAGE" -gt 85 ]; then
+      /run/current-system/sw/bin/wall "WARNING: Root partition at $USAGE%"
+    fi
+  '';
 }
