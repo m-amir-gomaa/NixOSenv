@@ -164,13 +164,13 @@
     shellAliases = {
       # ── Learning OS ────────────────────────────────────────────────────────
       # Primary entry points for the book extraction and distillation pipeline.
-      ingest-book    = "ingest-book";
-      extract-book   = "extract-book";
-      session-prep   = "session-prep";
-      ckd-save       = "ckd-save";
-      book-progress  = "book-progress";
-      book-cleanup   = "book-cleanup";
-      anki-export    = "anki-export";
+      ingest-book = "ingest-book";
+      extract-book = "extract-book";
+      session-prep = "session-prep";
+      ckd-save = "ckd-save";
+      book-progress = "book-progress";
+      book-cleanup = "book-cleanup";
+      anki-export = "anki-export";
       anki-sync-fail = "anki-sync-failures";
 
       # Custom Aliases
@@ -233,6 +233,7 @@
       export PATH="/home/qwerty/scdl-env/bin/":$PATH
       export PATH=$PATH:/usr/local/go/bin
       export PATH=$PATH:/home/qwerty/go/bin
+      export PATH=$PATH:/home/qwerty/NixOSenv/scripts
 
       # Learning OS Binaries
       export PATH=$HOME/Learning/bin:$PATH
