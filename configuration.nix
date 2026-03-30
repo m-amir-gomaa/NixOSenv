@@ -397,6 +397,7 @@
     ydotool
     wtype
     uv
+    kaggle         # Stable CLI (1.8.x) — the 2.0 pip version has upload-auth bugs
     libreoffice-fresh
 
     # God-mode auditing toolkit

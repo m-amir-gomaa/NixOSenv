@@ -297,7 +297,7 @@
       # `bash -l` gives a login shell so XDG/MIME env vars are fully populated;
       # `setsid` detaches the child so it outlives the shell that spawned it.
       "$files" =
-        "bash -lc 'fd --type f --hidden --exclude .git . $HOME | rofi -dmenu -i -p \"Open file\" | xargs -r -d \"\\n\" setsid xdg-open'";
+        "bash -lc 'fd -L --type f --hidden --exclude .git --exclude \"/nix/store\" . \"$HOME\" | grep \"^$HOME\" | rofi -dmenu -i -p \"Open file\" | xargs -r -d \"\\n\" setsid xdg-open'";
 
       # ─── Keybinds ─────────────────────────────────────────────────────────
       # Format: "MODS, KEY, DISPATCHER [, PARAMS]"
