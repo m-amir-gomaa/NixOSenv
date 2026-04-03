@@ -422,13 +422,21 @@
   services.udisks2.enable = true;
   services.devmon.enable = true;
   # ── Learning OS — Script PATH ─────────────────────────────────────────────
-  # Makes ~/Learning/bin scripts (book-progress, book-cleanup, extraction-watchdog,
-  # extract-book.sh, split-chapters.py, anki-export.py, pdf-pages.py) available
+  # Makes ~/Learning/bin scripts (foundry, book-progress, book-cleanup,
+  # extraction-watchdog, split-chapters.py, pdf-pages.py) available
   # system-wide without needing absolute paths.
   environment.sessionVariables = {
     PATH = [ "$HOME/Learning/bin" ];
     MANPATH = [ "$HOME/Learning/man" ];
   };
+
+  # ── Shell Intelligence ───────────────────────────────────────────────────
+  programs.zsh.shellInit = ''
+    # Source Foundry smart fzf completions if they exist
+    if [[ -f "$HOME/Learning/system/foundry/internal/foundry_completion.zsh" ]]; then
+      source "$HOME/Learning/system/foundry/internal/foundry_completion.zsh"
+    fi
+  '';
 
   # ── Fonts ─────────────────────────────────────────────────────────────────
   fonts.packages = with pkgs; [
