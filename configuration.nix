@@ -430,14 +430,6 @@
     MANPATH = [ "$HOME/Learning/man" ];
   };
 
-  # ── Shell Intelligence ───────────────────────────────────────────────────
-  programs.zsh.shellInit = ''
-    # Source Foundry smart fzf completions if they exist
-    if [[ -f "$HOME/Learning/system/foundry/internal/foundry_completion.zsh" ]]; then
-      source "$HOME/Learning/system/foundry/internal/foundry_completion.zsh"
-    fi
-  '';
-
   # ── Fonts ─────────────────────────────────────────────────────────────────
   fonts.packages = with pkgs; [
     noto-fonts

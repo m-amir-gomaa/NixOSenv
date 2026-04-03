@@ -1,0 +1,50 @@
+#compdef foundry
+# ─────────────────────────────────────────────────────────────────────────────
+# Standard Zsh completion for the Foundry v26-ELITE system.
+# Integrates natively with fzf-tab and oh-my-zsh.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_foundry_domains() {
+    local CURRICULA_DIR="$HOME/Learning/curricula"
+    local -a domains
+    if [[ -d "$CURRICULA_DIR" ]]; then
+        domains=($(ls "$CURRICULA_DIR"/*.curricula 2>/dev/null | xargs -n1 basename | sed 's/\.curricula$//'))
+    fi
+    _describe -t domains 'foundry domains' domains
+}
+
+_foundry() {
+    local curcontext="$curcontext" state line
+    typeset -A opt_args
+
+    _arguments -C \
+        '1: :->command' \
+        '2: :->domain' \
+        '*::arg:->args'
+
+    case $state in
+        command)
+            local -a subcommands
+            subcommands=(
+                'ingest:Discover and ingest PDFs into registry'
+                'sync:Reconcile registry with disk artifacts'
+                'status:Show domain progress summary'
+                'run:Orchestrate Kaggle extraction loop'
+            )
+            _describe -t commands 'foundry commands' subcommands
+        ;;
+        domain)
+            _foundry_domains
+        ;;
+        args)
+            case $words[2] in
+                ingest)
+                    _arguments \
+                        '--path[Override PDF source path]:directory:_directories'
+                ;;
+            esac
+        ;;
+    esac
+}
+
+_foundry "$@"
