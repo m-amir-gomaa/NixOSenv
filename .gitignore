@@ -1,0 +1,22 @@
+# Build artefacts
+result
+result-*
+
+# Secrets
+secrets.nix
+
+# Python / Nix
+__pycache__/
+*.pyc
+.direnv/
+
+# Sovereign AI State (Local Only)
+.claude/
+.claude-flow/
+.swarm/
+*.rvf
+*.rvf.lock
+*.db
+CLAUDE.md
+claude-flow.config.json
+ruflo-sync.py
