@@ -1,0 +1,4 @@
+#compdef extraction-watchdog
+_arguments \
+  '--dry-run[Simulate watchdog without actual shutdown]' \
+  '(-h --help)'{-h,--help}'[Display usage instructions]'

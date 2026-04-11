@@ -1,0 +1,14 @@
+#compdef book-cleanup
+_book_cleanup() {
+  local -a books
+  # Discover books dynamically from pipeline dir, excluding the 'library' subfolder
+  books=({$HOME/Learning/book-pipeline/*(/N:t)})
+  books=(${books:#library})
+
+  _arguments \
+    '--book[Target specific book slug for cleanup]:slug:(${books})' \
+    '--all[Clean all books with completed extractions]' \
+    '(-f --force)'{-f,--force}'[Force cleanup even if raw output is missing]' \
+    '(-h --help)'{-h,--help}'[Display usage instructions]'
+}
+_book_cleanup "$@"

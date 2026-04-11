@@ -1,0 +1,2 @@
+#compdef book-progress
+_arguments '(-h --help)'{-h,--help}'[Display usage instructions]'

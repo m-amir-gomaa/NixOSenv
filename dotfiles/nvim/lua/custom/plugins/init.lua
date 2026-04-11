@@ -1,0 +1,57 @@
+-- You can add your own plugins here or in other files in this directory!
+--  I promise not to create any merge conflicts in this directory :)
+--
+-- See the kickstart.nvim README for more information
+return {
+  --  { -- You can easily change to a different colorscheme.
+  --   -- Change the name of the colorscheme plugin below, and then
+  --   -- change the command in the config to whatever the name of that colorscheme is.
+  --   --
+  --   -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
+  --   'folke/tokyonight.nvim',
+  --   priority = 1000, -- Make sure to load this before all the other start plugins.
+  --   config = function()
+  --     ---@diagnostic disable-next-line: missing-fields
+  --     require('tokyonight').setup {
+  --       styles = {
+  --         comments = { italic = false }, -- Disable italics in comments
+  --       },
+  --     }
+  --
+  --     -- Load the colorscheme here.
+  --     -- Like many other themes, this one has different styles, and you could load
+  --     -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
+  --     vim.cmd.colorscheme 'tokyonight-night'
+  --   end,
+  -- },
+
+  -- NOTE: Plugins can specify dependencies.
+  --
+  -- The dependencies are proper plugin specifications as well - anything
+  -- you do for a plugin at the top level, you can do for a dependency.
+  --
+  -- Use the `dependencies` key to specify the dependencies of a particular plugin
+
+  -- my added plugins
+  -- {
+  --   'pwntester/octo.nvim',
+  --   cmd = 'Octo',
+  --   dependencies = {
+  --     'nvim-lua/plenary.nvim',
+  --     'nvim-tree/nvim-web-devicons',
+  --   },
+  --   config = function()
+  --     require('octo').setup {
+  --       enable_builtin = true,
+  --       use_local_fs = true,
+  --     }
+  --     vim.cmd [[hi OctoEditable guibg=none]]
+  --     vim.treesitter.language.register('markdown', 'octo')
+  --   end,
+  --   keys = {
+  --     { '<leader>O', '<cmd>Octo<cr>', desc = 'Octo' },
+  --     { '<leader>Op', '<cmd>Octo pr list<cr>', desc = 'Octo pr list' },
+  --   },
+  -- },
+  --
+}
