@@ -2,17 +2,16 @@
 result
 result-*
 
-# Secrets
+# ── Secrets ───────────────────────────────────────────────────────────────────
 secrets.nix
+.age-key.txt          # age private key — NEVER commit this
 
-# Python / Nix
+# ── Python / Nix ──────────────────────────────────────────────────────────────
 __pycache__/
 *.pyc
 .direnv/
 
-# Sovereign AI State (Local Only)
-.claude/
-.claude-flow/
+# ── Sovereign AI / agentic runtime state (local only) ────────────────────────
 .swarm/
 *.rvf
 *.rvf.lock
@@ -20,3 +19,20 @@ __pycache__/
 CLAUDE.md
 claude-flow.config.json
 ruflo-sync.py
+.stfolder
+.stfolder.removed-*
+
+# ── Accidental media files ────────────────────────────────────────────────────
+# These appear when download tools reconstruct absolute paths inside the repo
+*.mp3
+*.m4a
+*.mp4
+*.flac
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+nohup.out
+*.log
+
+# ── Scratch / test files ─────────────────────────────────────────────────────
+scratch/
+test-*.conf

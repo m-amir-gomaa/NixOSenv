@@ -34,19 +34,14 @@
     viAlias = true; # `vi` → nvim
     vimAlias = true; # `vim` → nvim
 
+    withRuby = false;
+    withPython3 = false;
+
     # ── Neovim Plugins (Nix-Managed) ─────────────────────────────────────────
     # We manage some plugins via Nix to ensure binary dependencies (like
     # Treesitter parsers) are correctly linked on NixOS.
-    plugins = with pkgs.vimPlugins; [
-      (nvim-treesitter.withPlugins (p: [
-        p.scss
-        p.svelte
-        p.vue
-        # Essential ones to ensure they are available in the Nix store
-        p.markdown
-        p.markdown_inline
-        p.latex
-      ]))
+    plugins = [
+      pkgs.vimPlugins.nvim-treesitter.withAllGrammars
     ];
 
     # All packages listed here are added to the PATH only while Neovim runs.
@@ -117,9 +112,18 @@
     ];
   };
 
-  # Point ~/.config/nvim at the live standalone nvim repo.
-  # mkOutOfStoreSymlink is used (not a plain source copy) so Lua edits are
-  # picked up without a rebuild.
-  xdg.configFile."nvim".source =
-    config.lib.file.mkOutOfStoreSymlink "/home/qwerty/nvim";
+  # Instead of symlinking the entire nvim directory which conflicts with
+  # home-manager's generated init.lua, we symlink the subdirectories and
+  # source the main init.lua via extraLuaConfig.
+  xdg.configFile."nvim/lua".source = config.lib.file.mkOutOfStoreSymlink "/home/qwerty/nvim/lua";
+  xdg.configFile."nvim/after".source = config.lib.file.mkOutOfStoreSymlink "/home/qwerty/nvim/after";
+  xdg.configFile."nvim/queries".source = config.lib.file.mkOutOfStoreSymlink "/home/qwerty/nvim/queries";
+  xdg.configFile."nvim/doc".source = config.lib.file.mkOutOfStoreSymlink "/home/qwerty/nvim/doc";
+  xdg.configFile."nvim/assets".source = config.lib.file.mkOutOfStoreSymlink "/home/qwerty/nvim/assets";
+  xdg.configFile."nvim/state".source = config.lib.file.mkOutOfStoreSymlink "/home/qwerty/nvim/state";
+  xdg.configFile."nvim/lazy-lock.json".source = config.lib.file.mkOutOfStoreSymlink "/home/qwerty/nvim/lazy-lock.json";
+
+  programs.neovim.initLua = ''
+    dofile("/home/qwerty/nvim/init.lua")
+  '';
 }

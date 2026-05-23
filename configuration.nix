@@ -53,6 +53,18 @@
   systemd.network.enable = true;
   networking.useNetworkd = true;
 
+  # Tailscale Mesh VPN
+  services.tailscale.enable = true;
+  networking.firewall = {
+    enable = false;
+    checkReversePath = "loose";
+    trustedInterfaces = [ "tailscale0" "docker0" ];
+    allowedTCPPorts = [ 80 8082 9000 9001 26257 6379 ];
+    allowedUDPPortRanges = [
+      { from = 50001; to = 50003; }
+    ];
+  };
+
   # Suppress DHCP-provided DNS so it doesn't override the global DoT servers.
   # These files keep DHCP for IP/gateway/NTP but discard DNS + domain hints.
   systemd.network.networks = {
@@ -229,7 +241,7 @@
   };
 
   # ── Sovereign Engineering (Tier 7) ──────────────────────────────────────────
-  
+
   # Kernel-Level Monitoring Tools (eBPF-ready)
   # (No dedicated programs.ebpf option exists; tools are listed in systemPackages)
   programs.bash.enableLsColors = true;
@@ -242,7 +254,7 @@
     home = "/var/lib/lnd";
     createHome = true;
   };
-  users.groups.lnd = {};
+  users.groups.lnd = { };
 
   systemd.services.lnd = {
     description = "Lightning Network Daemon (Sovereign Swarm)";
@@ -250,14 +262,15 @@
     after = [ "network-online.target" ];
     wants = [ "network-online.target" ];
     serviceConfig = {
-      ExecStart = ''${pkgs.lnd}/bin/lnd \
-        --bitcoin.active \
-        --bitcoin.mainnet \
-        --bitcoin.node=neutrino \
-        --neutrino.connect=mainnet-btcd.lnd.cloud \
-        --alias=sovereign-swarm \
-        --color=#6B4EFE \
-        --lnddir=/var/lib/lnd'';
+      ExecStart = ''
+        ${pkgs.lnd}/bin/lnd \
+                --bitcoin.active \
+                --bitcoin.mainnet \
+                --bitcoin.node=neutrino \
+                --neutrino.connect=mainnet-btcd.lnd.cloud \
+                --alias=sovereign-swarm \
+                --color=#6B4EFE \
+                --lnddir=/var/lib/lnd'';
       User = "lnd";
       Group = "lnd";
       Restart = "on-failure";
@@ -277,6 +290,9 @@
       "networkmanager"
       "video"
       "render"
+      "docker"
+      "kvm"
+      "libvirtd"
     ];
     shell = pkgs.zsh;
   };
@@ -310,16 +326,20 @@
     fd
     ripgrep
     android-tools
+    scrcpy
     syncthing
     unixtools.xxd
     pandoc
     zoom-us
+    anydesk
     dart-sass
     tree
     tldr
     parted
     tparted
     rsync
+    gdb
+
 
     # Terminal
     kitty
@@ -327,7 +347,7 @@
     # Wayland / Hyprland stack
     waybar
     mako
-    swww
+    awww
     rofi
     swaynotificationcenter
     grim
@@ -374,7 +394,12 @@
         pip
         pyqt6
         matplotlib
-        pyqtgraph
+        # pyqtgraph 0.14.0: SVGExporter.py:427 crashes on single-token SVG path
+        # commands (e.g. "M", "L") under Python 3.13. Tests run via installCheck
+        # phase (pytestCheckHook). doInstallCheck = false suppresses that phase.
+        (ps.pyqtgraph.overrideAttrs (_: {
+          doInstallCheck = false;
+        }))
         plyer
         pyinstaller
         requests
@@ -414,7 +439,7 @@
     discord
     google-chrome
     tor-browser
-    wasistlos
+    karere
     materialgram
     localsend
     yt-dlp
@@ -425,6 +450,7 @@
     pdfarranger
     kdePackages.okular
     kdePackages.breeze-icons
+    sioyek
     pkgs.bitwarden-cli
     gnupg
     zip
@@ -433,7 +459,9 @@
     anki-bin
     tauon
     loupe
+    papers
     obsidian
+    lmstudio
 
     # Misc
     pdfstudio2024
@@ -472,6 +500,9 @@
     # Cachix
     devenv
     cachix
+
+    # Tailscale
+    tailscale
   ];
   services.gvfs.enable = true;
   services.udisks2.enable = true;
@@ -537,6 +568,7 @@
     "video/quicktime" = [ "io.github.celluloid_player.Celluloid.desktop" ];
     "video/ogg" = [ "io.github.celluloid_player.Celluloid.desktop" ];
     "video/mpeg" = [ "io.github.celluloid_player.Celluloid.desktop" ];
+    "application/pdf" = [ "sioyek.desktop" ];
   };
 
   # ── Environment variables ─────────────────────────────────────────────────
@@ -620,6 +652,7 @@
   programs.virt-manager.enable = true;
   users.groups.libvirtd.members = [ "qwerty" ];
   virtualisation.libvirtd.enable = true;
+  virtualisation.docker.enable = true;
   virtualisation.spiceUSBRedirection.enable = true;
 
   services.journald.extraConfig = ''

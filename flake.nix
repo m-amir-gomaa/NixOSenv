@@ -44,14 +44,6 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # ── antigravity-nix — Cursor IDE (agentic AI coding tool) ────────────────
-    # antigravity-nix packages the Cursor IDE for NixOS, solving the usual
-    # GLIBC/FHS incompatibilities by wrapping the AppImage.
-    antigravity-nix = {
-      url = "github:jacopone/antigravity-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # ── german-pronunciation-cli — Rust-based German pronunciation trainer ──────
     # Replaces the deprecated aussprachetrainer flake.
     # CLI tool (gp): IPA transcription, Edge TTS, Whisper STT scoring,
@@ -63,53 +55,42 @@
       self,
       fenix,
       nixpkgs,
-      antigravity-nix,
       # german-pronunciation-cli,  # uncomment when flake.nix is added to the repo
       home-manager,
       ...
     }:
+    let
+      system = "x86_64-linux";
+      pkgs = import nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+      };
+    in
     {
       # ── Standalone packages ───────────────────────────────────────────────────
       # These can be built with `nix build .#PACKAGE_NAME`
-      packages.x86_64-linux = {
+      packages.${system} = {
         # default: the stable Rust toolchain (rustc + cargo)
-        default = fenix.packages.x86_64-linux.stable.toolchain; # CHANGED: minimal nightly → stable
+        default = fenix.packages.${system}.stable.toolchain; # CHANGED: minimal nightly → stable
         # autocommit: the AI autocommit tool (see modules/autocommit-pkg.nix)
-        autocommit = nixpkgs.legacyPackages.x86_64-linux.callPackage ./modules/autocommit-pkg.nix { };
+        autocommit = pkgs.callPackage ./modules/autocommit-pkg.nix { };
+        antigravity = pkgs.callPackage ./modules/antigravity-hub.nix { };
       };
       # ── NixOS system configuration ────────────────────────────────────────────
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
+        inherit system;
         modules = [
           # ── Core system config ──────────────────────────────────────────────
           ./hardware-configuration.nix # auto-generated hardware options
           ./configuration.nix # all system-level options
-          # ── Antigravity (Cursor IDE) ─────────────────────────────────────────
-          # Added as an inline module (not via overlay) so the package is in
-          # environment.systemPackages without scoping issues.
-          #
-          # bwrap 0.11.0 regression: --ro-bind-try now fails fatally when the
-          # source path is a symlink (even with -try).  /run/opengl-driver is a
-          # symlink managed by NixOS, so the upstream wrapper breaks.
-          # Fix: symlinkJoin preserves all other package outputs (desktop entry,
-          # icons, …) and postBuild overwrites only the launcher script, patching
-          # the two bind-mount lines to resolve symlinks at runtime via readlink.
+          # ── Antigravity 2.0 ────────────────────────────────────────────────
+          # Google split Antigravity 2.0 into a standalone agent hub, separate
+          # from the legacy VS Code-based IDE packaging. Keep this local package
+          # pinned to the official hub tarball/release-feed metadata.
           ({ pkgs, ... }: {
             nixpkgs.config.allowUnfree = true;
             environment.systemPackages = [
-              (pkgs.symlinkJoin {
-                name = "antigravity";
-                paths = [ antigravity-nix.packages.x86_64-linux.default ];
-                postBuild = ''
-                  rm $out/bin/antigravity
-                  sed \
-                    -e '/--ro-bind-try \/run\/opengl-driver /d' \
-                    -e '/--ro-bind-try \/run\/opengl-driver-32 /d' \
-                    ${antigravity-nix.packages.x86_64-linux.default}/bin/antigravity \
-                    > $out/bin/antigravity
-                  chmod +x $out/bin/antigravity
-                '';
-              })
+              (pkgs.callPackage ./modules/antigravity-hub.nix { })
               # german-pronunciation-cli.packages.x86_64-linux.default  # uncomment when flake.nix is added to the repo
             ];
           })
@@ -146,6 +127,7 @@
                     vendorHash = "sha256-X1wndkxemlUis2oWc4ufdonZqgO6aQikij0rU3jZaRs=";
                     doCheck = false; # upstream tests are fragile across versions
                   });
+
                 })
               ];
               environment.systemPackages = [
@@ -168,9 +150,9 @@
           )
           # ── Automatic NixOS upgrades ──────────────────────────────────────────
           # system.autoUpgrade rebuilds the system from this flake on a weekly
-          # schedule via a systemd timer.  It updates the nixpkgs and
-          # antigravity-nix inputs before building and commits the updated
-          # flake.lock via --commit-lock-file so the repo stays in sync.
+          # schedule via a systemd timer.  It updates nixpkgs before building
+          # and commits the updated flake.lock via --commit-lock-file so the
+          # repo stays in sync.
           #
           # randomizedDelaySec spreads the upgrade across a 45-minute window after
           # the scheduled time to avoid thundering-herd issues if multiple machines
@@ -182,8 +164,6 @@
               flags = [
                 "--update-input"
                 "nixpkgs"
-                "--update-input"
-                "antigravity-nix"
                 "--commit-lock-file"
                 "-L" # verbose log (shows package changes)
               ];
@@ -203,10 +183,11 @@
             # useUserPackages: install user packages via users.users.*.packages
             # (they appear in the user's profile, not in the system profile)
             home-manager.useUserPackages = true;
-            # backupFileExtension: if Home Manager wants to write a file that
-            # already exists as a non-managed file, back it up with this suffix
-            # instead of aborting the activation.
-            home-manager.backupFileExtension = "backup";
+            # backupFileExtension: if HM wants to write a file that already
+            # exists as a non-managed file, back it up with this suffix.
+            # Using "hm-backup" avoids collision with any legacy ".backup" files
+            # left over from older activations.
+            home-manager.backupFileExtension = "hm-backup";
             # Wire each home.nix file to its respective user.
             home-manager.users.qwerty = import ./home.nix;
             home-manager.users.root = import ./home-root.nix;

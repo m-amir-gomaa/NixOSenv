@@ -147,7 +147,6 @@
       # preserve_split = keep the split axis when a window is closed so the
       #                  remaining windows don't unexpectedly rearrange
       dwindle = {
-        pseudotile = true;
         preserve_split = true;
       };
 
@@ -167,7 +166,7 @@
 
       # ─── Miscellaneous ────────────────────────────────────────────────────
       misc = {
-        # 0 = no built-in default wallpaper; swww handles wallpaper
+        # 0 = no built-in default wallpaper; awww handles wallpaper
         force_default_wallpaper = 0;
         # Remove the Hyprland logo shown before the wallpaper loads
         disable_hyprland_logo = true;
@@ -247,11 +246,20 @@
         "kitty @ set-window scrollback-pager none"
 
         # ── Wallpaper ───────────────────────────────────────────────────────
-        # swww-daemon must start first; it creates a unix socket that
-        # `swww img` connects to.  The wipe transition gives a left→right
-        # reveal effect on first load.
-        "swww-daemon"
-        "swww img ~/.config/hypr/wallpaper.jpg --transition-type wipe"
+        # awww-daemon must start first; it creates a unix socket that
+        # `awww img` connects to.  Use absolute Nix/Home paths so this works
+        # even before login shells have populated PATH or expanded "~".
+        "${pkgs.awww}/bin/awww-daemon"
+        "${pkgs.writeShellScript "set-hypr-wallpaper" ''
+          for attempt in 1 2 3 4 5; do
+            if ${pkgs.awww}/bin/awww img /home/qwerty/.config/hypr/wallpaper.jpg --transition-type wipe; then
+              exit 0
+            fi
+            sleep 0.25
+          done
+
+          exit 1
+        ''}"
 
         # ── Keyring ─────────────────────────────────────────────────────────
         # gnome-keyring provides the libsecret D-Bus service used by browsers,
@@ -294,8 +302,7 @@
       # them, and xdg-open launches the result with the appropriate application.
       # `bash -l` gives a login shell so XDG/MIME env vars are fully populated;
       # `setsid` detaches the child so it outlives the shell that spawned it.
-      "$files" =
-        "bash -lc 'fd -L --type f --hidden --exclude .git --exclude \"/nix/store\" . \"$HOME/Downloads\" | grep \"^$HOME/Downloads\" | rofi -dmenu -i -p \"Open file\" | xargs -r -d \"\\n\" setsid xdg-open'";
+      "$files" = "/home/qwerty/NixOSenv/scripts/file-search-launcher.sh";
 
       # ─── Keybinds ─────────────────────────────────────────────────────────
       # Format: "MODS, KEY, DISPATCHER [, PARAMS]"
@@ -430,7 +437,7 @@
         "$mod, F,           fullscreen, 0"
         "$mod SHIFT, F,     togglefloating"
         "$mod, P,           pseudo"
-        "$mod, J,           togglesplit"
+        "$mod, backslash,   layoutmsg, togglesplit"
 
         # ── Focus movement ───────────────────────────────────────────────────
         "$mod, H,  movefocus, l"
@@ -532,5 +539,16 @@
       ];
     };
   };
+
+  # Keep rebuilds live: replacing dotfiles/hypr/wallpaper.jpg and running `nr`
+  # relinks this file, then asks the already-running awww daemon to display it.
   home.file.".config/hypr/wallpaper.jpg".source = ./dotfiles/hypr/wallpaper.jpg;
+  home.activation.applyHyprWallpaper = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    wallpaper="/home/qwerty/.config/hypr/wallpaper.jpg"
+    runtime_dir="/run/user/$(id -u)"
+
+    if [ -e "$wallpaper" ] && [ -d "$runtime_dir" ]; then
+      XDG_RUNTIME_DIR="$runtime_dir" ${pkgs.awww}/bin/awww img "$wallpaper" --transition-type none >/dev/null 2>&1 || true
+    fi
+  '';
 }

@@ -15,9 +15,6 @@
   lib,
   ...
 }:
-let
-  secrets = import ./secrets.nix;
-in
 {
   imports = [
     ./nvim.nix # Neovim + LSPs via programs.neovim
@@ -34,7 +31,7 @@ in
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
-  # ── Session environment variables ─────────────────────────────────────────
+  # --- AI Provider API Keys (Moved to runtime env) ---
   home.sessionVariables = {
     DOTNET_SYSTEM_GLOBALIZATION_INVARIANT = "1";
     XDG_SESSION_TYPE = "wayland";
@@ -43,25 +40,10 @@ in
     MOZ_ENABLE_WAYLAND = "1";
     GTK_THEME = "Adwaita:dark";
 
-    # ── AI Provider API Keys ───────────────────────────────────────────────
-    ANTHROPIC_API_KEY    = secrets.anthropic_api_key;
-    GEMINI_API_KEY       = secrets.gemini_api_key;
-    OPEN_ROUTER_API_KEY  = secrets.open_router_api_key;
-    GROQ_API_KEY         = secrets.groq_api_key;
-    CEREBRAS_API_KEY     = secrets.cerebras_api_key;
-    MISTRAL_API_KEY      = secrets.mistral_api_key;
-    COHERE_API_KEY       = secrets.cohere_api_key;
-    GITHUB_API_KEY       = secrets.github_api_key;
-
-    # ── OpenClaude default provider: Gemini 2.5 Flash ─────────────────────
-    # Switch providers at runtime using the oc-* aliases below.
-    # openclaude requires CLAUDE_CODE_USE_OPENAI=1 for all non-Anthropic backends.
-    # NOTE: Mistral models pass API test but fail in openclaude (max_completion_tokens
-    # incompatibility) — excluded until openclaude fixes it.
     CLAUDE_CODE_USE_OPENAI = "1";
-    OPENAI_API_KEY         = secrets.gemini_api_key;
-    OPENAI_BASE_URL        = "https://generativelanguage.googleapis.com/v1beta/openai";
-    OPENAI_MODEL           = "gemini-2.5-flash";
+    OPENAI_API_KEY         = "ollama";
+    OPENAI_BASE_URL        = "http://localhost:11434/v1";
+    OPENAI_MODEL           = "qwen2.5-coder:7b";
   };
 
   # ── GTK theming ──────────────────────────────────────────────────────────
@@ -198,6 +180,14 @@ in
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
 
+    plugins = [
+      {
+        name = "fzf-tab";
+        src = pkgs.zsh-fzf-tab;
+        file = "share/fzf-tab/fzf-tab.plugin.zsh";
+      }
+    ];
+
     history = {
       size = 10000;
       save = 10000;
@@ -207,48 +197,51 @@ in
     shellAliases = {
       n   = "nvim";
       nr  = "age -d -i ~/.age-key.txt ~/NixOSenv/secrets.nix.age > ~/NixOSenv/secrets.nix && cd ~/NixOSenv && git add . && sudo nixos-rebuild switch --flake path:/home/qwerty/NixOSenv#nixos";
+      nrb = "age -d -i ~/.age-key.txt ~/NixOSenv/secrets.nix.age > ~/NixOSenv/secrets.nix && cd ~/NixOSenv && git add . && sudo nixos-rebuild boot --flake path:/home/qwerty/NixOSenv#nixos";
       vs  = "cd ~/NixOSenv/ && nvim";
       l   = "ls -lt --human-readable";
       o   = "xdg-open";
 
-      # ── OpenClaude ────────────────────────────────────────────────────────
-      # Default launch uses Gemini 2.5 Flash (set in sessionVariables above).
-      oc     = "openclaude";
-      claude = "openclaude";
+      # ── OpenClaude (Local Providers Only) ──────────────────────────────────
+      # Default launch uses local Ollama with Qwen2.5-Coder (set in sessionVariables above).
+      oc          = ''CLAUDE_CODE_USE_OPENAI=1 OPENAI_API_KEY="ollama" OPENAI_BASE_URL="http://localhost:11434/v1" OPENAI_MODEL="qwen2.5-coder:7b" openclaude'';
+      claude      = ''CLAUDE_CODE_USE_OPENAI=1 OPENAI_API_KEY="ollama" OPENAI_BASE_URL="http://localhost:11434/v1" OPENAI_MODEL="qwen2.5-coder:7b" openclaude'';
+      oc-ollama   = ''CLAUDE_CODE_USE_OPENAI=1 OPENAI_API_KEY="ollama" OPENAI_BASE_URL="http://localhost:11434/v1" OPENAI_MODEL="qwen2.5-coder:7b" openclaude'';
+      oc-lmstudio = ''CLAUDE_CODE_USE_OPENAI=1 OPENAI_API_KEY="lm-studio" OPENAI_BASE_URL="http://localhost:1234/v1" OPENAI_MODEL="loaded-model" openclaude'';
 
-      # ── Provider switching — verified working $(date +%Y-%m-%d) ───────────
-      # Gemini (Flash only — Pro daily quota exhausted at test time)
-      oc-gemini-flash = ''OPENAI_API_KEY="$GEMINI_API_KEY" OPENAI_BASE_URL="https://generativelanguage.googleapis.com/v1beta/openai" OPENAI_MODEL="gemini-2.5-flash" openclaude'';
-      oc-gemini-pro   = ''OPENAI_API_KEY="$GEMINI_API_KEY" OPENAI_BASE_URL="https://generativelanguage.googleapis.com/v1beta/openai" OPENAI_MODEL="gemini-2.5-pro" openclaude'';
+      # LM Studio Wayland Launcher (enforces GPU window decorations & native scaling)
+      lmstudio    = "lm-studio --enable-features=WaylandWindowDecorations --ozone-platform-hint=auto";
 
-      # Groq (fast inference, all 7 models verified)
-      oc-groq       = ''OPENAI_API_KEY="$GROQ_API_KEY" OPENAI_BASE_URL="https://api.groq.com/openai/v1" OPENAI_MODEL="llama-3.3-70b-versatile" openclaude'';
-      oc-groq-qwen  = ''OPENAI_API_KEY="$GROQ_API_KEY" OPENAI_BASE_URL="https://api.groq.com/openai/v1" OPENAI_MODEL="qwen/qwen3-32b" openclaude'';
-      oc-groq-fast  = ''OPENAI_API_KEY="$GROQ_API_KEY" OPENAI_BASE_URL="https://api.groq.com/openai/v1" OPENAI_MODEL="llama-3.1-8b-instant" openclaude'';
-      oc-groq-llama4 = ''OPENAI_API_KEY="$GROQ_API_KEY" OPENAI_BASE_URL="https://api.groq.com/openai/v1" OPENAI_MODEL="meta-llama/llama-4-scout-17b-16e-instruct" openclaude'';
-      oc-groq-cmpd  = ''OPENAI_API_KEY="$GROQ_API_KEY" OPENAI_BASE_URL="https://api.groq.com/openai/v1" OPENAI_MODEL="groq/compound" openclaude'';
-      oc-gpt-oss    = ''OPENAI_API_KEY="$GROQ_API_KEY" OPENAI_BASE_URL="https://api.groq.com/openai/v1" OPENAI_MODEL="openai/gpt-oss-120b" openclaude'';
-      oc-gpt-oss-sm = ''OPENAI_API_KEY="$GROQ_API_KEY" OPENAI_BASE_URL="https://api.groq.com/openai/v1" OPENAI_MODEL="openai/gpt-oss-20b" openclaude'';
-
-      # Cerebras (2 of 3 verified; gpt-oss-120b 404'd)
-      oc-cerebras = ''OPENAI_API_KEY="$CEREBRAS_API_KEY" OPENAI_BASE_URL="https://api.cerebras.ai/v1" OPENAI_MODEL="qwen-3-235b-a22b-instruct-2507" openclaude'';
-      oc-cerebras-llm = ''OPENAI_API_KEY="$CEREBRAS_API_KEY" OPENAI_BASE_URL="https://api.cerebras.ai/v1" OPENAI_MODEL="llama3.1-8b" openclaude'';
-
-      # OpenRouter free (verified — note: free models can rate-limit under heavy use)
-      oc-nemotron  = ''OPENAI_API_KEY="$OPEN_ROUTER_API_KEY" OPENAI_BASE_URL="https://openrouter.ai/api/v1" OPENAI_MODEL="nvidia/llama-3.1-nemotron-70b-instruct" openclaude'';
-      oc-nemo-nano = ''OPENAI_API_KEY="$OPEN_ROUTER_API_KEY" OPENAI_BASE_URL="https://openrouter.ai/api/v1" OPENAI_MODEL="nvidia/nemotron-nano-9b-v2:free" openclaude'';
-      oc-gemma-27b = ''OPENAI_API_KEY="$OPEN_ROUTER_API_KEY" OPENAI_BASE_URL="https://openrouter.ai/api/v1" OPENAI_MODEL="google/gemma-3-27b-it:free" openclaude'';
-      oc-gemma-12b = ''OPENAI_API_KEY="$OPEN_ROUTER_API_KEY" OPENAI_BASE_URL="https://openrouter.ai/api/v1" OPENAI_MODEL="google/gemma-3-12b-it:free" openclaude'';
-      oc-minimax   = ''OPENAI_API_KEY="$OPEN_ROUTER_API_KEY" OPENAI_BASE_URL="https://openrouter.ai/api/v1" OPENAI_MODEL="minimax/minimax-m2.5:free" openclaude'';
-      oc-glm       = ''OPENAI_API_KEY="$OPEN_ROUTER_API_KEY" OPENAI_BASE_URL="https://openrouter.ai/api/v1" OPENAI_MODEL="z-ai/glm-4.5-air:free" openclaude'';
-      oc-trinity   = ''OPENAI_API_KEY="$OPEN_ROUTER_API_KEY" OPENAI_BASE_URL="https://openrouter.ai/api/v1" OPENAI_MODEL="arcee-ai/trinity-large-preview:free" openclaude'';
-      oc-lfm       = ''OPENAI_API_KEY="$OPEN_ROUTER_API_KEY" OPENAI_BASE_URL="https://openrouter.ai/api/v1" OPENAI_MODEL="liquid/lfm-2.5-1.2b-instruct:free" openclaude'';
+      # ── Sovereign OS Unified CLI ──────────────────────────────────────────
+      sov-day    = "python3 ~/Learning/Sovereign_German/sovereign_orchestrate.py";
+      sov-drill  = "python3 ~/Learning/Sovereign_German/sovereign_drills.py";
+      sov-audio  = "python3 ~/Learning/Sovereign_German/sovereign_audio.py";
+      sov-anki   = "python3 ~/Learning/Sovereign_German/sovereign_anki_gen.py";
+      sov-career = "python3 ~/Learning/scripts/career_orchestrate.py";
     };
 
-    initContent = lib.mkBefore ''
+    initContent = ''
       export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
       export NPM_CONFIG_PREFIX="$HOME/.npm-global"
       export PATH="$NPM_CONFIG_PREFIX/bin:$PATH"
+
+      # ── Home-wide Zsh Dotfiles ──────────────────────────────────────────────
+      # Sources your custom aliases and paths from the NixOSenv repository.
+      [[ -f ~/NixOSenv/dotfiles/zsh/.zshrc ]] && source ~/NixOSenv/dotfiles/zsh/.zshrc
+
+      # ── fzf-tab Configuration ───────────────────────────────────────────────
+      # Disable sort when completing `git checkout`
+      zstyle ':completion:*:git-checkout:*' sort false
+      # Set descriptions format to enable group support
+      zstyle ':completion:*:descriptions' format '[%d]'
+      # Set list-colors to enable filename colorizing
+      zstyle ':completion:*' list-colors ''${(s.:.)LS_COLORS}
+      # Force zsh not to show completion menu, which allows fzf-tab to capture the request
+      zstyle ':completion:*' menu no
+      # Preview directory's content with eza when completing cd
+      zstyle ':fzf-tab:complete:cd:*' fzf-preview 'tree -C $realpath | head -n 20'
+      # Switch group using `,` and `.`
+      zstyle ':fzf-tab:*' switch-group ',' '.'
     '';
 
     oh-my-zsh = {
@@ -258,7 +251,64 @@ in
     };
   };
 
+  # ── fzf — fuzzy finder + Ctrl+R history search ───────────────────────────
+  programs.fzf = {
+    enable = true;
+    enableZshIntegration = true;  # sources key-bindings.zsh → Ctrl+R, Ctrl+T, Alt+C
+  };
+
+  # ── VS Code — Reproducible IDE ──────────────────────────────────────────
+  programs.vscode = {
+    enable = true;
+    package = pkgs.vscode;
+    extensions = with pkgs.vscode-extensions; [
+      jnoortheen.nix-ide
+      golang.go
+      ms-python.python
+      ms-azuretools.vscode-docker
+      eamodio.gitlens
+      christian-kohler.path-intellisense
+    ];
+    userSettings = {
+      "editor.fontSize" = 14;
+      "editor.fontFamily" = "'JetBrainsMono Nerd Font', 'monospace'";
+      "editor.fontLigatures" = true;
+      "workbench.colorTheme" = "Default Dark Modern";
+      "terminal.integrated.fontFamily" = "JetBrainsMono Nerd Font";
+      "nix.enableLanguageServer" = true;
+      "nix.serverPath" = "nil";
+      "window.titleBarStyle" = "custom";
+    };
+  };
+
   # ── Dotfile Symlinks ─────────────────────────────────────────────────────
   home.file.".p10k.zsh".source = ./dotfiles/zsh/.p10k.zsh;
+
+  # ── Sioyek (Premium PDF Reader) ─────────────────────────────────────────
+  home.file.".config/sioyek/prefs_user.config".text = ''
+    # Premium Dark Mode & Visuals
+    startup_commands toggle_dark_mode
+    background_color           #1a1a1a
+    dark_mode_background_color #1a1a1a
+    dark_mode_text_color       #e0e0e0
+    status_bar_color           #0a0a0a
+    status_bar_text_color      #e0e0e0
+    ui_font                    JetBrainsMono Nerd Font
+    font_size                  12
+
+    # Performance & Smoothness
+    page_separator_width       2
+    page_separator_color       #2a2a2a
+    unfocused_page_opacity     0.8
+  '';
+
+  home.file.".config/sioyek/keys_user.config".text = ''
+    # Premium Shortcuts
+    toggle_dark_mode           d
+    smart_jump_under_cursor    s
+    overview_definition        o
+    portal                     p
+    toggle_custom_color        c
+  '';
 
 }
