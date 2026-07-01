@@ -2,7 +2,7 @@
 
 # NixOS Environment Overview
 
-Welcome to the root of your declarative NixOS architecture. While specific agentic features (like OpenClaude) occupy dedicated documentation, this guide covers the structural mapping of the core OS elements. 
+Welcome to the root of your declarative NixOS architecture. While specific agentic features (like OpenCode) occupy dedicated documentation, this guide covers the structural mapping of the core OS elements. 
 
 ## 🏗️ Repository Layout
 

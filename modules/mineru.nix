@@ -355,7 +355,7 @@ let
       # The [pipeline] extra pulls in torch, torchvision, and the layout/OCR
       # model dependencies.  Without it, mineru installs but torch is missing
       # and crashes at startup with: NameError: name 'torch' is not defined
-      "$VENV/bin/pip" install "mineru[pipeline]==${mineruVersion}" \
+      "$VENV/bin/pip" install "mineru[pipeline]==${mineruVersion}" accelerate \
         --extra-index-url https://download.pytorch.org/whl/cpu
 
       echo "${mineruVersion}" > /var/lib/mineru/.installed-version

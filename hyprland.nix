@@ -24,6 +24,10 @@
   wayland.windowManager.hyprland = {
     enable = true;
 
+    # Keep legacy hyprlang config format (home.stateVersion < "26.05").
+    # Switch to "lua" only after migrating hyprland.nix settings to Lua syntax.
+    configType = "hyprlang";
+
     # ── systemd integration ──────────────────────────────────────────────────
     # Registers hyprland-session.target in the user's systemd instance.
     # Other user services (waybar, mako, etc.) declare

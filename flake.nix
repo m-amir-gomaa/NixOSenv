@@ -81,7 +81,6 @@
         inherit system;
         modules = [
           # ── Core system config ──────────────────────────────────────────────
-          ./hardware-configuration.nix # auto-generated hardware options
           ./configuration.nix # all system-level options
           # ── Antigravity 2.0 ────────────────────────────────────────────────
           # Google split Antigravity 2.0 into a standalone agent hub, separate
@@ -164,6 +163,10 @@
               flags = [
                 "--update-input"
                 "nixpkgs"
+                "--update-input"
+                "home-manager"
+                "--update-input"
+                "fenix"
                 "--commit-lock-file"
                 "-L" # verbose log (shows package changes)
               ];

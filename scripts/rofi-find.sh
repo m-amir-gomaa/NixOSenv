@@ -42,7 +42,7 @@ EXCLUDES=(
     ".mempalace"
     ".flow-nexus"
     ".gitlawb"
-    ".openclaude"
+    ".opencode"
     ".kaggle"
     ".nix-defexpr"
     ".pki"

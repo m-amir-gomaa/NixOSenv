@@ -9,6 +9,7 @@
   home.homeDirectory = "/root";
 
   home.stateVersion = "25.11";
+  home.enableNixpkgsReleaseCheck = false;
 
   home.sessionVariables = {
     DOTNET_SYSTEM_GLOBALIZATION_INVARIANT = "1";

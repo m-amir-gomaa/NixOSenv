@@ -1,78 +1,76 @@
-# OpenClaude Provider & Model Reference (Local-Only)
+# OpenCode Provider & Model Reference
 
-OpenClaude is configured to run entirely offline and locally using **Ollama** and **LM Studio**. 
+OpenCode (`opencode`) is the AI coding agent. It is installed globally via npm (`opencode-ai` package) and configured via `~/.config/opencode/config.json`.
 
 ---
 
 ## Default Provider (Local Ollama)
 
-By default, launching `oc` or `openclaude` connects to your local Ollama server using the `qwen2.5-coder:7b` model.
+By default, launching `ai` connects to your local Ollama server with `qwen2.5-coder:14b`.
 
-| Alias | Launcher Command | Target Model |
-|---|---|---|
-| `oc` / `claude` | `openclaude` | `qwen2.5-coder:7b` |
+| Alias          | Model                    | Backend                      |
+|----------------|--------------------------|------------------------------|
+| `ai` / `ai-qwen` | `qwen2.5-coder:14b`    | Ollama (localhost:11434)     |
+| `ai-qwen-sm`   | `qwen2.5-coder:7b`       | Ollama                       |
+| `ai-deepseek`  | `deepseek-r1:14b`        | Ollama                       |
+| `ai-deepseek-sm` | `deepseek-r1:8b`       | Ollama                       |
+| `ai-llama`     | `llama3.2:latest`        | Ollama                       |
+| `ai-mistral`   | `mistral:latest`         | Ollama                       |
+| `ai-gemma`     | `gemma-4-E4B-it-GGUF`   | LM Studio (localhost:1234)   |
+| `ai-gemini`    | `gemini-2.5-flash`       | Google Gemini API            |
+| `ai-groq`      | `llama3-70b-8192`        | Groq API                     |
+
+The same models are available as `oc-*` shell functions (e.g. `oc-qwen`, `oc-deepseek`, `oc-gemini`).
 
 ---
 
-## Local Providers & Aliases
+## Local Providers
 
 ### 1. Ollama (Background Service)
 
-Ollama is enabled globally as a systemd service. It runs in the background at `http://localhost:11434`.
+Ollama is enabled globally as a systemd service, running at `http://localhost:11434`.
 
-* **Launcher Alias:** `oc-ollama`
-* **Default Model:** `qwen2.5-coder:7b`
-* **How to run:**
-  1. Pull the model first if you haven't already:
-     ```bash
-     ollama pull qwen2.5-coder:7b
-     ```
-  2. Start OpenClaude:
-     ```bash
-     oc-ollama
-     ```
-
----
+```bash
+ollama pull qwen2.5-coder:14b   # pull model first if needed
+ai                               # launch opencode with default model
+```
 
 ### 2. LM Studio (Desktop GUI & Server)
 
-LM Studio is installed globally. It provides a visual Hugging Face model downloader and developer server.
+LM Studio provides a visual model downloader and local server.
 
-* **Launcher Alias:** `oc-lmstudio`
-* **Wayland Client Alias:** `lmstudio`
-* **Base URL:** `http://localhost:1234/v1`
-* **How to run:**
-  1. Launch the LM Studio GUI natively under Wayland:
-     ```bash
-     lmstudio
-     ```
-  2. Search for and download your target GGUF model (e.g., `Qwen2.5-Coder-7B-Instruct-GGUF`).
-  3. Load the model inside the LM Studio GUI.
-  4. Go to the **Developer Tab** (Server icon on the left panel) and **Start the Local Server** (typically maps to port `1234`).
-  5. Start OpenClaude in your workspace directory:
-     ```bash
-     oc-lmstudio
-     ```
+1. Launch under Wayland: `lmstudio`
+2. Download a GGUF model in the GUI.
+3. Go to **Developer Tab → Start Server** (port 1234).
+4. Launch: `ai-gemma`
 
 ---
 
-## How it Works Under the Hood
+## Cloud Providers
 
-OpenClaude uses standard environment variables to communicate with local endpoints:
+API keys are stored in `secrets.nix` (decrypted from `secrets.nix.age`) and written into `~/.config/opencode/config.json` at setup time.
 
-```bash
-CLAUDE_CODE_USE_OPENAI=1         # Tells OpenClaude to use OpenAI-compatible endpoint mapping
-OPENAI_API_KEY="ollama"          # Local dummy auth key
-OPENAI_BASE_URL="http://..."     # Points to local port (11434 for Ollama, 1234 for LM Studio)
-OPENAI_MODEL="model-name"        # The model to target
-```
+| Alias       | Model               | Provider      |
+|-------------|---------------------|---------------|
+| `ai-gemini` | `gemini-2.5-flash`  | Google Gemini |
+| `ai-groq`   | `llama3-70b-8192`   | Groq          |
 
-These defaults are loaded automatically in your `home.sessionVariables` and can be overridden per-invocation using the aliases above.
+---
+
+## How it Works
+
+OpenCode reads `~/.config/opencode/config.json` for all provider credentials,
+model definitions, MCP server configurations, and agent prompts.
+
+The `model` field uses the format `provider/model-id`, e.g.:
+- `ollama/qwen2.5-coder:14b`
+- `google/gemini-2.5-flash`
+- `groq/llama3-70b-8192`
 
 ---
 
 ## Switching Providers at Runtime
 
-Inside an active `openclaude` terminal session:
-* Use the `/provider` command to inspect, configure, or switch active provider profiles.
-* Use the `/model` command to change the loaded model.
+Inside an active `opencode` TUI session:
+- Use `/model` to switch models on the fly.
+- Pass `-m provider/model` on the command line to start with a specific model.

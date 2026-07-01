@@ -25,7 +25,7 @@ Declarative NixOS configuration for a Hyprland-based laptop (NVIDIA Prime + Inte
 ├── docs/
 │   ├── system-overview.md       # NixOS architecture reference
 │   ├── secrets-management.md    # API key handling
-│   └── providers.md             # OpenClaude provider & model guide
+│   └── providers.md             # OpenCode provider & model guide
 │
 ├── dotfiles/                    # Dotfiles symlinked by Home Manager
 └── scripts/                     # Utility scripts
@@ -37,17 +37,19 @@ Declarative NixOS configuration for a Hyprland-based laptop (NVIDIA Prime + Inte
 nr    # Decrypt secrets, stage changes, run nixos-rebuild switch
 ```
 
-## AI Agent (OpenClaude)
+## AI Agent (OpenCode)
 
-OpenClaude (`openclaude`) is installed globally via npm. It uses the OpenAI-compatible
-provider mode — no patching required.
+`opencode` is installed globally via npm (`opencode-ai`). Config lives in
+`~/.config/opencode/config.json` — providers, MCP servers and the agent prompt
+are all declared there.
 
 ```bash
-oc               # Launch with default provider (Gemini 2.5 Flash)
-oc-groq          # Launch with Groq (Llama 3.3 70B)
-oc-cerebras      # Launch with Cerebras (Qwen 3 235B)
-oc-gemini-pro    # Launch with Gemini 2.5 Pro
-oc-nemotron      # Launch with OpenRouter / Nvidia Nemotron
+ai               # Launch with default model (qwen2.5-coder:14b via Ollama)
+ai-gemini        # Google Gemini 2.5 Flash
+ai-groq          # Groq  — llama3-70b-8192
+oc-qwen          # same as ai, opencode -m ollama/qwen2.5-coder:14b
+oc-deepseek      # opencode -m ollama/deepseek-r1:14b
+oc-models        # list all locally available Ollama + LM Studio models
 ```
 
 See [docs/providers.md](./docs/providers.md) for the full provider and model reference.

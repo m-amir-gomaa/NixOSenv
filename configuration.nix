@@ -47,67 +47,23 @@
   ];
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
+  # Disable iwlwifi + iwlmvm power saving at the kernel driver level.
+  # TLP's WIFI_PWR_ON_* only controls the nl80211 power-save flag; the MVM
+  # driver has its own power_scheme that causes the card to sleep mid-TCP.
+  # power_save=0 disables driver-level PS; power_scheme=1 = active/full-power.
+  boot.extraModprobeConfig = ''
+    options iwlwifi power_save=0
+    options iwlmvm power_scheme=1
+  '';
+
   # ── Networking (systemd-networkd + iwd) ──────────────────────────────────
   networking.hostName = "nixos";
   networking.networkmanager.enable = false;
   systemd.network.enable = true;
   networking.useNetworkd = true;
+  networking.firewall.enable = false;
 
-  # Tailscale Mesh VPN
-  services.tailscale.enable = true;
-  networking.firewall = {
-    enable = false;
-    checkReversePath = "loose";
-    trustedInterfaces = [ "tailscale0" "docker0" ];
-    allowedTCPPorts = [ 80 8082 9000 9001 26257 6379 ];
-    allowedUDPPortRanges = [
-      { from = 50001; to = 50003; }
-    ];
-  };
-
-  # Suppress DHCP-provided DNS so it doesn't override the global DoT servers.
-  # These files keep DHCP for IP/gateway/NTP but discard DNS + domain hints.
-  systemd.network.networks = {
-    "10-wlan" = {
-      matchConfig.Name = "wlan0";
-      networkConfig = {
-        DHCP = "yes";
-        IPv6AcceptRA = true;
-      };
-      dhcpV4Config = {
-        UseDNS = false;
-        UseDomains = false;
-      };
-      dhcpV6Config = {
-        UseDNS = false;
-        UseDomains = false;
-      };
-      ipv6AcceptRAConfig = {
-        UseDNS = false;
-        UseDomains = false;
-      };
-    };
-    "20-eth" = {
-      matchConfig.Name = "enp3s0";
-      networkConfig = {
-        DHCP = "yes";
-        IPv6AcceptRA = true;
-      };
-      dhcpV4Config = {
-        UseDNS = false;
-        UseDomains = false;
-      };
-      dhcpV6Config = {
-        UseDNS = false;
-        UseDomains = false;
-      };
-      ipv6AcceptRAConfig = {
-        UseDNS = false;
-        UseDomains = false;
-      };
-    };
-  };
-
+  # iwd — lightweight Wi-Fi connection daemon (replaces wpa_supplicant)
   networking.wireless.iwd = {
     enable = true;
     settings = {
@@ -115,22 +71,33 @@
         EnableIPv6 = true;
         RoutePriorityOffset = 300;
       };
-      Settings = {
-        AutoConnect = true;
-      };
+      Settings.AutoConnect = true;
     };
   };
 
-  # DNS-over-TLS via systemd-resolved
-  # Primary: AdGuard (no-log, no-filter)   Fallback: Quad9 (malware-blocking)
-  # DNSOverTLS = "yes" hard-fails if TLS is unavailable — no plaintext fallback.
+  # Tell systemd-networkd to use DHCP for IP/gateway but ignore router DNS
+  # (we set our own DNS via systemd-resolved below)
+  systemd.network.networks = {
+    "10-wlan" = {
+      matchConfig.Name = "wlan0";
+      networkConfig.DHCP = "yes";
+      dhcpV4Config = { UseDNS = false; UseDomains = false; };
+    };
+    "20-eth" = {
+      matchConfig.Name = "enp3s0";
+      networkConfig.DHCP = "yes";
+      dhcpV4Config = { UseDNS = false; UseDomains = false; };
+    };
+  };
+
+  # DNS via systemd-resolved — plain UDP, no DoT (ISP blocks port 853)
   services.resolved = {
     enable = true;
     settings.Resolve = {
-      DNS = "94.140.14.14#dns.adguard-dns.com 2a10:50c0::ad1:ff#dns.adguard-dns.com";
-      FallbackDNS = "9.9.9.9#dns.quad9.net 149.112.112.112#dns.quad9.net 2620:fe::fe#dns.quad9.net";
-      DNSOverTLS = "yes";
-      DNSSEC = "true";
+      DNS = "8.8.8.8 1.1.1.1";
+      FallbackDNS = "9.9.9.9";
+      DNSOverTLS = "no";
+      DNSSEC = "allow-downgrade";
       Domains = "~.";
     };
   };
@@ -198,10 +165,15 @@
 
   services.printing.enable = true;
 
+
+
   # ── AI & Search (Ollama + SearXNG) ──────────────────────────────────────────
   services.ollama = {
-    enable = true;
+    enable = false;
     package = pkgs.ollama-cpu; # Force CPU-only on Intel i7-1165G7
+    environmentVariables = {
+      OLLAMA_NUM_CTX = "8192";
+    };
   };
 
   services.searx = {
@@ -318,6 +290,7 @@
     curl
     wget
     git
+    gh
     gitkraken
     gcc
     gnumake
@@ -331,7 +304,6 @@
     unixtools.xxd
     pandoc
     zoom-us
-    anydesk
     dart-sass
     tree
     tldr
@@ -339,7 +311,6 @@
     tparted
     rsync
     gdb
-
 
     # Terminal
     kitty
@@ -380,6 +351,7 @@
     qpdf
     mupdf # mutool
     pdftk
+    calibre
 
     # Dark mode theming
     adw-gtk3 # GTK3 port of Adwaita (dark variant)
@@ -446,7 +418,6 @@
     ffmpeg
     wireshark
     dig
-    encfs
     pdfarranger
     kdePackages.okular
     kdePackages.breeze-icons
@@ -501,8 +472,8 @@
     devenv
     cachix
 
-    # Tailscale
-    tailscale
+    # Tailscale (disabled)
+    # tailscale
   ];
   services.gvfs.enable = true;
   services.udisks2.enable = true;
@@ -556,19 +527,7 @@
         "hyprland"
       ];
     };
-  };
 
-  xdg.mime.defaultApplications = {
-    "inode/directory" = [ "org.gnome.Nautilus.desktop" ];
-    "application/x-gnome-saved-search" = [ "org.gnome.Nautilus.desktop" ];
-    "video/mp4" = [ "io.github.celluloid_player.Celluloid.desktop" ];
-    "video/x-matroska" = [ "io.github.celluloid_player.Celluloid.desktop" ];
-    "video/webm" = [ "io.github.celluloid_player.Celluloid.desktop" ];
-    "video/x-msvideo" = [ "io.github.celluloid_player.Celluloid.desktop" ];
-    "video/quicktime" = [ "io.github.celluloid_player.Celluloid.desktop" ];
-    "video/ogg" = [ "io.github.celluloid_player.Celluloid.desktop" ];
-    "video/mpeg" = [ "io.github.celluloid_player.Celluloid.desktop" ];
-    "application/pdf" = [ "sioyek.desktop" ];
   };
 
   # ── Environment variables ─────────────────────────────────────────────────
@@ -587,6 +546,9 @@
   services.tlp.settings = {
     START_CHARGE_THRESH_BAT0 = 70;
     STOP_CHARGE_THRESH_BAT0 = 80;
+    # Disable Wi-Fi power saving to prevent iwlwifi sleep/disconnect bugs
+    WIFI_PWR_ON_AC = "off";
+    WIFI_PWR_ON_BAT = "off";
   };
   services.power-profiles-daemon.enable = false;
 
