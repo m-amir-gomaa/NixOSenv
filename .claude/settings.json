@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(nix flake check path:/home/qwerty/NixOSenv *)",
+      "Bash(git diff *)",
+      "Bash(git status *)",
+      "Bash(git log *)",
+      "Bash(claude mcp list)",
+      "Bash(claude mcp *)",
+      "Bash(sudo nixos-rebuild switch --flake /home/qwerty/NixOSenv#nixos)",
+      "Bash(sudo nixos-rebuild boot --flake /home/qwerty/NixOSenv#nixos)",
+      "WebSearch",
+      "WebFetch",
+      "mcp__utcp__call_tool",
+      "mcp__utcp__search_tools",
+      "mcp__utcp__list_tools",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_context7_context7__query-docs"
+    ]
+  }
+}

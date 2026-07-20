@@ -21,6 +21,9 @@ claude-flow.config.json
 ruflo-sync.py
 .stfolder
 .stfolder.removed-*
+.claude/              # Claude Code project config — local only
+.serena/              # Serena AI assistant state — local only
+.mcp.json             # MCP server config — local only
 
 # ── Accidental media files ────────────────────────────────────────────────────
 # These appear when download tools reconstruct absolute paths inside the repo
