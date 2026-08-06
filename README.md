@@ -1,159 +1,108 @@
 # NixOS Environment
 
-Declarative NixOS configuration for a Hyprland-based laptop (NVIDIA Prime + Intel iGPU).
+Flake-based [NixOS](https://nixos.org) + [Home Manager](https://github.com/nix-community/home-manager) configuration. Declarative end-to-end: system, user home, dotfiles, secrets, and disk layout are all defined in Nix and reproducible from a blank disk.
 
-## Repository Layout
+**Stack:** NixOS (unstable) · Home Manager · Hyprland (Wayland) · Neovim · Kitty · Zsh · SDDM
+**Hardware:** Intel iGPU + NVIDIA MX350 (Prime offload) · Hyprland
+**Toolchains:** Go · Python (NumPy / SciPy / PyTorch) · Rust (stable via fenix)
+
+## Highlights
+
+- **Reproducible from zero.** `disko.nix` declares the OS-disk layout; `docs/bootstrap.md` walks a fresh machine from installer ISO → `disko` → `nixos-install` → `scripts/bootstrap.sh`. No manual partitioning, no forgotten config.
+- **Age-encrypted secrets.** `secrets.nix.age` (API keys, SSH keys) lives in-repo encrypted; the private key stays out-of-band. `bootstrap.sh` decrypts and provisions on install.
+- **Declarative everything.** Home Manager manages `home.nix`; dotfiles live in `dotfiles/` as live symlinks (edit → applies without rebuild); system services, DNS (blocky), lock screen, and idle are all `.nix`.
+- **Engineering setup.** Reproducible builds, pinned inputs, git identity + SSH managed per-host, CI-checkable with `nix flake check`.
+
+## Repository layout
 
 ```
-~/NixOSenv/
-├── flake.nix                    # Flake entrypoint
-├── configuration.nix            # System-level config (boot, services, packages)
-├── hardware-configuration.nix   # Auto-generated — do not edit
-├── disko.nix                    # Declarative disk layout (fresh installs ONLY)
-├── home.nix                     # User config (shell, aliases, env vars)
-│
-├── modules/                     # Reusable Nix modules
-│   ├── auto-git-nixosenv.nix
-│   ├── autocommit-pkg.nix
-│   ├── instascript.nix
-│   └── mineru.nix
-│
-├── hyprland.nix                 # Hyprland compositor + keybinds
-├── waybar.nix                   # Status bar
-├── kitty.nix                    # Terminal config
-├── swaync.nix                   # Notification center
-├── nvim.nix                     # Neovim + LSPs
-│
-├── docs/
-│   ├── bootstrap.md             # ★ New-machine setup guide
-│   ├── system-overview.md       # NixOS architecture reference
-│   └── providers.md             # OpenCode provider & model guide
-│
-├── dotfiles/                    # Dotfiles symlinked by Home Manager
-│   ├── claude/                  # Global Claude Code config (settings, agents, keybindings)
-│   ├── utcp/                    # UTCP MCP bridge config + .env.example + igintel-mcp example
-│   └── zsh/
-│       ├── .zshrc               # Shell aliases + Claude Code backend switchers
-│       └── .zshrc_secrets.example  # Template — copy to ~/.zshrc_secrets
-└── scripts/
-    ├── bootstrap.sh             # ★ Provision a fresh machine (configs, secrets, MCP)
-    └── ...
+.
+├── flake.nix                  # Flake entrypoint — inputs, outputs, overlays
+├── configuration.nix          # System config: boot, services, packages
+├── hardware-configuration.nix # Auto-generated per machine — do not edit
+├── disko.nix                  # Declarative OS-disk layout (fresh installs only)
+├── home.nix                   # Home Manager user config
+├── home-root.nix              # Home Manager config for root
+├── hyprland.nix               # Hyprland compositor + keybinds
+├── hyprlock.nix / hypridle.nix# Lock screen / idle
+├── waybar.nix / swaync.nix / mako.nix  # Status bar / notifications
+├── kitty.nix / nvim.nix       # Terminal / editor (+ LSPs)
+├── blocky.nix                 # DNS content blocker (port 5300)
+├── sddm-kwin-numlock.nix      # SDDM numlock state
+├── cachix.nix                 # Binary cache subscriptions
+├── modules/                   # Reusable packages + services
+│   ├── auto-git-nixosenv.nix  #   systemd autocommit service (config sync)
+│   ├── autocommit-pkg.nix     #   AI commit-message generator
+│   ├── instascript.nix        #   InstaScript package
+│   ├── antigravity-hub.nix    #   Antigravity agent hub
+│   └── mineru.nix             #   MinerU (PDF → Markdown) tool
+├── dotfiles/                  # Versioned dotfiles (symlinked / sourced)
+│   ├── claude/                #   Claude Code global config
+│   ├── utcp/                  #   UTCP MCP bridge config + templates
+│   ├── kitty/ nvim/ zsh/ hypr/
+├── scripts/
+│   ├── bootstrap.sh           # Fresh-machine provisioning (configs, secrets, MCP)
+│   ├── record.sh              # Screen recording (wl-screenrec)
+│   └── ...
+├── secrets.nix.age            # Age-encrypted secrets vault (committed)
+└── docs/
+    ├── bootstrap.md           # New-machine setup guide
+    ├── secrets-management.md  # Age vault workflow
+    ├── system-overview.md     # Architecture reference
+    ├── home-manager.md        # Home Manager integration notes
+    └── providers.md           # LLM provider/model reference
 ```
 
-## Applying Changes
+## Toolchains
 
-```bash
-nr    # nixos-rebuild switch --flake ~/NixOSenv#nixos
-```
+- **Go** — `golang.go` via Home Manager; Neovim LSP (`gopls`) editor support.
+- **Python** — `python3.withPackages`: numpy, pandas, scipy, scikit-learn, sympy, matplotlib, PyTorch (`torch`/`torchaudio`/`torchvision`), manim.
+- **Rust** — stable toolchain from `fenix`: `cargo`, `clippy`, `rust-src`, `rustfmt`, `rust-docs`; nightly available on demand.
+- **Extras** — Docker, `gh` CLI, Neovim + LSPs (see `nvim.nix`, `dotfiles/nvim`).
 
-## Claude Code — Model Backend
+## LLM provider integration
 
-Direct DeepSeek API via Anthropic-compatible endpoint.
-Key stored in `~/.zshrc_secrets` (outside repo, never committed).
+This machine is set up for working with LLM APIs end-to-end — provider abstraction, key isolation, and local models:
 
-```bash
-deepseek                # Enable DeepSeek (auto-called on shell start)
-claude-status           # Show current backend URL + model
-```
-
-### Adding a New Backend
-
-Add a function to `dotfiles/zsh/.zshrc` following this pattern:
-
-```bash
-my-backend() {
-  export ANTHROPIC_BASE_URL="https://api.provider.com/anthropic"
-  export ANTHROPIC_AUTH_TOKEN="$MY_API_KEY"     # from ~/.zshrc_secrets
-  export ANTHROPIC_API_KEY="$MY_API_KEY"
-  export ANTHROPIC_MODEL="model-id"
-  export ANTHROPIC_DEFAULT_OPUS_MODEL="model-id"
-  export ANTHROPIC_DEFAULT_SONNET_MODEL="model-id"
-  export ANTHROPIC_DEFAULT_HAIKU_MODEL="fast-model-id"
-  export CLAUDE_CODE_SUBAGENT_MODEL="fast-model-id"
-  export CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS="1"
-  export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1"
-  echo "✅ Switched to My Backend"
-}
-```
-
-Then add the key to `~/.zshrc_secrets`.
+- **Provider-agnostic backend switcher** in `dotfiles/zsh/.zshrc` (`deepseek`, `claude-status`, …). Swaps `ANTHROPIC_BASE_URL` / model envs at shell runtime; keys live only in `~/.zshrc_secrets`, never in the repo.
+- **MCP bridge** (`dotfiles/utcp/`) exposes nix, system, security, and web-search tooling to Claude Code via a config-driven bridge; secrets in `~/.utcp/.env`, versioned only as `.example` templates.
+- **Local models** — Ollama + LM Studio for offline inference; OpenCode wired for provider routing (see `docs/providers.md`).
 
 ## Secrets
 
-API keys live in `~/.zshrc_secrets` — a file **outside** the NixOSenv repo.
-It is never committed, never tracked by git, never read by `nixos-rebuild`.
-
-### Initial Setup
+API + SSH keys live in the **age-encrypted vault** `secrets.nix.age` (committed) and the local `~/.zshrc_secrets` / `~/.utcp/.env` (never committed). Private material is never in git.
 
 ```bash
-# Copy the template
-cp ~/NixOSenv/dotfiles/zsh/.zshrc_secrets.example ~/.zshrc_secrets
+# decrypt the vault (manual edit flow — see docs/secrets-management.md)
+age -d -i ~/.age-key.txt secrets.nix.age > secrets.nix
 
-# Edit with real keys
-nvim ~/.zshrc_secrets
+# key rotation: edit secrets.nix, re-encrypt
+age -r "$(age-keygen -y ~/.age-key.txt)" secrets.nix > secrets.nix.age
 ```
 
-### Layout
+## Applying changes
 
 ```bash
-# ~/.zshrc_secrets — NEVER commit this file
-export DEEPSEEK_API_KEY="sk-..."    # Primary AI backend
-export TAVILY_API_KEY="tvly-..."    # Web search for MCP tools
+nr    # sudo nixos-rebuild switch --flake ~/NixOSenv#nixos
 ```
 
-`.zshrc` sources this file at shell init:
+## New machine setup
+
+Full guide: **[docs/bootstrap.md](./docs/bootstrap.md)** — blank disk → `disko` → install → `scripts/bootstrap.sh` (Claude/UTCP configs, secrets, SSH keys, MCP registration).
 
 ```bash
-[[ -f ~/.zshrc_secrets ]] && source ~/.zshrc_secrets
-```
-
-### Key Rotation
-
-```bash
-# Edit the file, replace old key with new key
-nvim ~/.zshrc_secrets
-
-# Delete old key from provider dashboard
-# DeepSeek:  https://platform.deepseek.com/api_keys
-# OpenRouter: https://openrouter.ai/keys
-# Fireworks:  https://fireworks.ai/api-keys
-# Tavily:     https://tavily.com
-```
-
-### New Machine Setup
-
-**Full guide: [docs/bootstrap.md](./docs/bootstrap.md)** — from blank disk (disko)
-through secrets transfer, `scripts/bootstrap.sh`, and first rebuild.
-
-TL;DR:
-```bash
-# on the fresh machine, after install + first boot:
 bash ~/NixOSenv/scripts/bootstrap.sh --secrets-dir /path/to/usb-backup
 nr
 ```
 
-Secrets (`~/.zshrc_secrets`, `~/.age-key.txt`, `~/.ssh/`, `~/.utcp/.env`) are
-the only state not derivable from the repo — transfer them out-of-band (USB,
-encrypted transfer). Claude Code + UTCP configs are versioned in
-`dotfiles/claude/` and `dotfiles/utcp/` and provisioned by the script.
+## Docs
 
-## AI Agent (OpenCode)
-
-`opencode` is installed globally via npm (`opencode-ai`). Config lives in
-`~/.config/opencode/config.json` — providers, MCP servers and the agent prompt
-are all declared there.
-
-```bash
-ai               # Launch with default model (qwen2.5-coder:14b via Ollama)
-ai-gemini        # Google Gemini 2.5 Flash
-ai-groq          # Groq — llama3-70b-8192
-oc-qwen          # same as ai, opencode -m ollama/qwen2.5-coder:14b
-oc-deepseek      # opencode -m ollama/deepseek-r1:14b
-oc-models        # list all locally available Ollama + LM Studio models
-```
-
-See [docs/providers.md](./docs/providers.md) for the full provider and model reference.
+- [bootstrap.md](./docs/bootstrap.md) — new-machine setup
+- [secrets-management.md](./docs/secrets-management.md) — age vault workflow
+- [system-overview.md](./docs/system-overview.md) — architecture
+- [home-manager.md](./docs/home-manager.md) — Home Manager notes
+- [providers.md](./docs/providers.md) — LLM providers / models
 
 ---
 
-_NixOS Environment — July 2026_
+_NixOS Environment_
