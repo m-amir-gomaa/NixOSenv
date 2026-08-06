@@ -63,7 +63,7 @@ All shell aliases are declared here, not in a hand-edited `.zshrc`. Key aliases:
 
 | Alias | Command | Purpose |
 |---|---|---|
-| `nr` | `age -d ... && sudo nixos-rebuild switch --flake ...` | Full system + HM rebuild |
+| `nr` | `sudo nixos-rebuild switch --flake ~/NixOSenv#nixos` | Full system + HM rebuild |
 | `nrb` | Same, with `boot` | Stage changes for next boot |
 | `vs` | `cd ~/NixOSenv/ && nvim` | Quick config editor |
 | `ai` | `opencode -m ollama/qwen2.5-coder:14b` | Local AI agent |
@@ -119,21 +119,20 @@ All Home Manager changes go through the same single command as system changes:
 nr
 ```
 
-This alias (defined in `home.nix` itself) expands to:
+This alias (defined in `dotfiles/zsh/.zshrc`) expands to:
 
 ```bash
-age -d -i ~/.age-key.txt ~/NixOSenv/secrets.nix.age > ~/NixOSenv/secrets.nix \
-  && cd ~/NixOSenv \
-  && git add . \
-  && sudo nixos-rebuild switch --flake path:/home/qwerty/NixOSenv#nixos
+cd ~/NixOSenv && sudo nixos-rebuild switch --flake ~/NixOSenv#nixos
 ```
 
 The rebuild will:
-1. Decrypt secrets.
-2. Stage all changes.
-3. Evaluate `flake.nix`, which pulls in `home.nix` and all its imports.
-4. Rewrite all managed symlinks and config files atomically.
-5. Activate the new user generation.
+1. Evaluate `flake.nix`, which pulls in `home.nix` and all its imports.
+2. Rewrite all managed symlinks and config files atomically.
+3. Activate the new user generation.
+
+> Note: `nr` does **not** decrypt `secrets.nix.age`. The age vault is decrypted
+> manually when editing secrets (see [docs/secrets-management.md](./secrets-management.md))
+> or by `scripts/bootstrap.sh` on a fresh machine.
 
 ---
 

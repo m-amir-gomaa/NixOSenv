@@ -55,6 +55,7 @@ bash ~/NixOSenv/scripts/bootstrap.sh
 - Registers the `utcp` and `agent-vision` MCP servers in Claude Code (`claude mcp add`)
 - Restores `~/.zshrc_secrets`, `~/.age-key.txt`, `~/.ssh/` from `--secrets-dir` (chmod 600)
 - Decrypts `secrets.nix.age` → `secrets.nix` using the age key
+- **Extracts SSH keys from the vault** into `~/.ssh/` (`id_ed25519`, `id_ed25519_anon`, pubkeys, config) — no manual SSH transfer needed
 
 ```bash
 # 4. Rebuild
@@ -70,7 +71,7 @@ never committed:
 |---|---|---|
 | `~/.zshrc_secrets` | `DEEPSEEK_API_KEY`, `TAVILY_API_KEY` | `--secrets-dir/zshrc_secrets` |
 | `~/.age-key.txt` | age private key — decrypts `secrets.nix.age` | `--secrets-dir/age-key.txt` |
-| `~/.ssh/id_ed25519` (+`.pub`, `id_ed25519_anon`) | GitHub push keys | `--secrets-dir/ssh/` |
+| `~/.ssh/id_ed25519` (+`.pub`, `id_ed25519_anon`) | GitHub push keys | **in the age vault** (`ssh_id_ed25519*`, `ssh_config`) — extracted by bootstrap, no manual transfer |
 | `~/.utcp/.env` | GitHub/GitLab/Figman tokens | `--secrets-dir/utcp.env` |
 | `~/.config/autocommit/secrets.env` | auto-commit OpenAI key (optional) | manual |
 
@@ -92,7 +93,9 @@ The private age key was previously committed to this repo's git history
 (2026-08-06: scrubbed via history rewrite; working copy + `~/.age-key.txt`
 still valid). Because the key briefly lived in a pushed repo, **rotate the 12
 API keys in `secrets.nix.age` and the OpenRouter/Tavily/GitHub tokens at your
-earliest convenience.** Procedure:
+earliest convenience.** The SSH keys are now also in the vault (2026-08-06) —
+if the age key ever leaks again they are exposed too, so include `~/.ssh`
+regeneration in the rotation. Procedure:
 1. Decrypt: `age -d -i ~/.age-key.txt secrets.nix.age > secrets.nix`
 2. Edit keys → rotate each on its provider dashboard
 3. Re-encrypt: `age -r $(age-keygen -y ~/.age-key.txt) secrets.nix > secrets.nix.age`

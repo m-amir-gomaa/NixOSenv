@@ -12,6 +12,8 @@
 #   5. Optional: restore secrets (.zshrc_secrets, .age-key.txt, .ssh, .utcp/.env)
 #      from a --secrets-dir backup (USB/encrypted), chmod 600 everything
 #   6. Decrypt secrets.nix.age → secrets.nix (gitignored) with the age key
+#   7. Extract SSH keys from the decrypted vault into ~/.ssh (id_ed25519,
+#      id_ed25519_anon, pub keys, config) — no manual transfer needed
 #
 # Safe: never overwrites an existing non-symlink file — backs it up to NAME.bak.
 # Idempotent: re-running updates symlinks and skips files already in place.
@@ -179,6 +181,33 @@ decrypt_vault() {
   fi
 }
 
+provision_ssh_vault() {
+  # Extract SSH keys from the decrypted age vault into ~/.ssh.
+  # Idempotent: never overwrites an existing key (backup from --secrets-dir wins).
+  [[ -f "${REPO}/secrets.nix" ]] || { echo "ssh:    no secrets.nix — vault SSH keys skipped"; return; }
+  command -v nix >/dev/null || { echo "ssh:    nix not found — vault SSH keys skipped"; return; }
+  mkdir -p "${HOME}/.ssh"; chmod 700 "${HOME}/.ssh"
+  local any=0
+  write_key() { # write_key ATTR DEST MODE
+    local attr="$1" dest="$2" mode="$3"
+    if [[ -e "$dest" ]]; then
+      echo "ssh:    $dest already present (kept)"
+      return
+    fi
+    if nix eval --impure --raw --expr "let s = import ${REPO}/secrets.nix; in s.${attr}" 2>/dev/null > "$dest"; then
+      chmod "$mode" "$dest"
+      any=1
+      echo "ssh:    $dest written from vault"
+    fi
+  }
+  write_key ssh_id_ed25519       "${HOME}/.ssh/id_ed25519" 600
+  write_key ssh_id_ed25519_pub   "${HOME}/.ssh/id_ed25519.pub" 644
+  write_key ssh_id_ed25519_anon  "${HOME}/.ssh/id_ed25519_anon" 600
+  write_key ssh_id_ed25519_anon_pub "${HOME}/.ssh/id_ed25519_anon.pub" 644
+  write_key ssh_config           "${HOME}/.ssh/config" 600
+  [[ "$any" -eq 1 ]] && echo "ssh:    SSH keys provisioned from age vault"
+}
+
 finish() {
   touch "${HOME}/.profile.bootstrapped"
   echo
@@ -193,4 +222,5 @@ provision_utcp
 register_mcp
 restore_secrets
 decrypt_vault
+provision_ssh_vault
 finish
