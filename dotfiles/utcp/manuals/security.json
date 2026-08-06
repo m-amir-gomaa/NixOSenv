@@ -1,0 +1,150 @@
+{
+  "utcp_version": "1.0",
+  "tools": [
+    {
+      "name": "nmap_scan",
+      "description": "Port scanning and network discovery. TCP SYN scan (-sS) for stealth, service version detection (-sV), OS fingerprinting (-O). Root required for SYN scan.",
+      "tags": ["security", "network", "scanning"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "description": "Target IP, hostname, or CIDR range (e.g. 192.168.1.0/24)."
+          },
+          "flags": {
+            "type": "string",
+            "description": "Additional nmap flags (e.g. '-sV -O --top-ports 100'). Default: -sS -p-."
+          }
+        },
+        "required": ["target"]
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "sudo nmap UTCP_ARG_flags_UTCP_END UTCP_ARG_target_UTCP_END",
+            "append_to_final_output": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "ss_sockets",
+      "description": "Socket statistics — show listening and established TCP/UDP connections with process info. Linux socket telemetry tool replacing netstat.",
+      "tags": ["security", "network", "sockets"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "flags": {
+            "type": "string",
+            "description": "ss flags. Default: -tulnp (TCP+UDP listening, numeric, processes). Use -tunap for all connections."
+          }
+        }
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "ss UTCP_ARG_flags_UTCP_END",
+            "append_to_final_output": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "tcpdump_capture",
+      "description": "Network packet capture and analysis. Shows raw packet headers, traffic patterns. Root required.",
+      "tags": ["security", "network", "packets"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "interface": {
+            "type": "string",
+            "description": "Network interface to capture on (e.g. eth0, wlan0, any)."
+          },
+          "filter": {
+            "type": "string",
+            "description": "BPF filter expression (e.g. 'port 443', 'host 192.168.1.1', 'tcp and port 22')."
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of packets to capture before stopping. Default: 50."
+          }
+        },
+        "required": ["interface"]
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "sudo tcpdump -vvv -nn -i UTCP_ARG_interface_UTCP_END -c UTCP_ARG_count_UTCP_END UTCP_ARG_filter_UTCP_END",
+            "append_to_final_output": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "strace_trace",
+      "description": "System call tracer. Trace syscalls made by a process — see file operations, network calls, memory allocation. Use -c for summary counts, -p for attaching to PID.",
+      "tags": ["security", "debug", "syscalls"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "Command to trace (e.g. 'ls -la', 'curl example.com')."
+          },
+          "flags": {
+            "type": "string",
+            "description": "strace flags. Default: -c (summary). Use '-f -e trace=network' for network syscalls, '-p PID' to attach."
+          },
+          "pid": {
+            "type": "integer",
+            "description": "Attach to running process by PID instead of running command."
+          }
+        }
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "strace UTCP_ARG_flags_UTCP_END UTCP_ARG_command_UTCP_END",
+            "append_to_final_output": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "lsof_list",
+      "description": "List open files — file descriptors, network connections, unix sockets, pipes. Shows which process has what open.",
+      "tags": ["security", "debug", "files"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "flags": {
+            "type": "string",
+            "description": "lsof flags. Default: -i (network connections). Use '-p PID' for specific process, '-u user' for user files."
+          },
+          "pid": {
+            "type": "integer",
+            "description": "Show open files for specific process ID."
+          },
+          "path": {
+            "type": "string",
+            "description": "Show processes using this file/directory path."
+          }
+        }
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "sudo lsof UTCP_ARG_flags_UTCP_END",
+            "append_to_final_output": true
+          }
+        ]
+      }
+    }
+  ]
+}

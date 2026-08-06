@@ -5,6 +5,8 @@
     settings = {
       positionX = "right";
       positionY = "top";
+      # overlay renders above all windows including fullscreen apps.
+      # Use "top" for below fullscreen but above normal windows.
       layer = "overlay";
       control-center-margin-top = 5;
       control-center-margin-bottom = 5;
@@ -13,24 +15,25 @@
       notification-icon-size = 64;
       notification-body-image-height = 100;
       notification-body-image-width = 200;
-      timeout = 10;
-      timeout-low = 5;
-      timeout-critical = 0;
+      timeout = 10;          # seconds before a normal notification auto-dismisses
+      timeout-low = 5;       # seconds for low-urgency notifications
+      timeout-critical = 0;  # 0 = critical notifications stay until manually dismissed
       fit-to-screen = true;
       control-center-width = 400;
       control-center-height = 600;
       notification-window-width = 400;
-      keyboard-shortcuts = true;
+      keyboard-shortcuts = true;  # Escape to close, arrow keys to navigate
       image-visibility = "always";
-      transition-time = 200;
-      hide-on-clear = false;
-      hide-on-action = true;
-      script-fail-notify = true;
+      transition-time = 200;       # ms for slide-in/out animation
+      hide-on-clear = false;  # keep panel open after "Clear All" so you can see it emptied
+      hide-on-action = true;  # close panel automatically after clicking a notification action
+      script-fail-notify = true;  # show a notification if a notification script fails
+      # Widget order in the control centre panel (top to bottom)
       widgets = [
-        "title"
-        "dnd"
-        "notifications"
-        "mpris"
+        "title"         # header bar with "Notifications" label + Clear All button
+        "dnd"           # Do Not Disturb toggle switch
+        "notifications" # the actual notification list
+        "mpris"         # media player controls (shows when music is playing)
       ];
       widget-config = {
         title = {

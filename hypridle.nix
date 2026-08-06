@@ -14,14 +14,14 @@
       };
 
       listener = [
-        # 1. Lock screen after 5 minutes (300s) of inactivity
+        # 1. Lock screen after 15 minutes (900s) of inactivity
         {
-          timeout = 300;
+          timeout = 900;
           on-timeout = "${pkgs.systemd}/bin/loginctl lock-session";
         }
-        # 2. Turn off display 30 seconds after locking (330s total)
+        # 2. Turn off display 30 seconds after locking (930s total)
         {
-          timeout = 330;
+          timeout = 930;
           on-timeout = "${config.wayland.windowManager.hyprland.package}/bin/hyprctl dispatch dpms off";
           on-resume = "${config.wayland.windowManager.hyprland.package}/bin/hyprctl dispatch dpms on";
         }

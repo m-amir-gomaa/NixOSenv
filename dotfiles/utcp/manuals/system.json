@@ -1,0 +1,193 @@
+{
+  "utcp_version": "1.0",
+  "tools": [
+    {
+      "name": "git_diff_staged",
+      "description": "Show staged git changes (git diff --staged). Shows what will be committed.",
+      "tags": ["git", "vcs", "diff"],
+      "inputs": {
+        "type": "object",
+        "properties": {}
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "git diff --staged",
+            "append_to_final_output": true
+          }
+        ],
+        "working_dir": "/home/qwerty/NixOSenv"
+      }
+    },
+    {
+      "name": "git_diff_unstaged",
+      "description": "Show unstaged git changes (git diff). Shows working tree modifications not yet staged.",
+      "tags": ["git", "vcs", "diff"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Optional file/directory path to restrict diff to."
+          }
+        }
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "git diff -- UTCP_ARG_path_UTCP_END",
+            "append_to_final_output": true
+          }
+        ],
+        "working_dir": "/home/qwerty/NixOSenv"
+      }
+    },
+    {
+      "name": "git_log",
+      "description": "Show git commit history with concise one-line format.",
+      "tags": ["git", "vcs", "history"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "description": "Number of recent commits to show. Default: 10."
+          }
+        }
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "git log --oneline -n UTCP_ARG_count_UTCP_END",
+            "append_to_final_output": true
+          }
+        ],
+        "working_dir": "/home/qwerty/NixOSenv"
+      }
+    },
+    {
+      "name": "git_status",
+      "description": "Show working tree status (git status --short).",
+      "tags": ["git", "vcs", "status"],
+      "inputs": {
+        "type": "object",
+        "properties": {}
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "git status --short",
+            "append_to_final_output": true
+          }
+        ],
+        "working_dir": "/home/qwerty/NixOSenv"
+      }
+    },
+    {
+      "name": "systemctl_status",
+      "description": "Check status of a systemd service. Shows active state, recent logs, and enabled status.",
+      "tags": ["systemd", "service", "status"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "type": "string",
+            "description": "Systemd service name (e.g. 'nginx', 'docker', 'sshd')."
+          }
+        },
+        "required": ["service"]
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "systemctl status UTCP_ARG_service_UTCP_END --no-pager -l",
+            "append_to_final_output": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "journalctl_logs",
+      "description": "View systemd journal logs for a service. Shows recent log entries.",
+      "tags": ["systemd", "logs", "debug"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "type": "string",
+            "description": "Systemd service name to filter logs for."
+          },
+          "lines": {
+            "type": "integer",
+            "description": "Number of recent log lines to show. Default: 50."
+          }
+        }
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "journalctl -u UTCP_ARG_service_UTCP_END --no-pager -n UTCP_ARG_lines_UTCP_END",
+            "append_to_final_output": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "disk_usage",
+      "description": "Show disk usage summary. Reports filesystem usage and available space.",
+      "tags": ["system", "disk", "monitoring"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Specific path to check. Default: root filesystem."
+          }
+        }
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "df -h UTCP_ARG_path_UTCP_END",
+            "append_to_final_output": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "find_largest_files",
+      "description": "Find largest files in a directory tree. Useful for tracking down disk usage.",
+      "tags": ["system", "disk", "maintenance"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Directory to search."
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of largest files to show. Default: 20."
+          }
+        },
+        "required": ["path"]
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "find UTCP_ARG_path_UTCP_END -type f -exec du -h {} + 2>/dev/null | sort -rh | head -n UTCP_ARG_count_UTCP_END",
+            "append_to_final_output": true
+          }
+        ]
+      }
+    }
+  ]
+}

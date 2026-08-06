@@ -1,0 +1,159 @@
+{
+  "utcp_version": "1.0",
+  "tools": [
+    {
+      "name": "nix_flake_check",
+      "description": "Verify NixOS system flake syntax and evaluation. Runs nix flake check on the NixOSenv directory.",
+      "tags": ["nixos", "build", "verify"],
+      "inputs": {
+        "type": "object",
+        "properties": {}
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "nix flake check path:/home/qwerty/NixOSenv --extra-experimental-features 'nix-command flakes'",
+            "append_to_final_output": true
+          }
+        ],
+        "working_dir": "/home/qwerty/NixOSenv"
+      }
+    },
+    {
+      "name": "nix_flake_update",
+      "description": "Update NixOS flake inputs. Updates all flake dependencies to latest versions.",
+      "tags": ["nixos", "update", "dependencies"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "string",
+            "description": "Specific flake input to update. Leave empty to update all."
+          }
+        }
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "nix flake update UTCP_ARG_input_UTCP_END",
+            "append_to_final_output": true
+          }
+        ],
+        "working_dir": "/home/qwerty/NixOSenv"
+      }
+    },
+    {
+      "name": "nixos_rebuild",
+      "description": "Rebuild NixOS system configuration. WARNING: requires root privileges. Actions: switch (activate now), build (build only), test (activate but don't set as boot default), boot (activate at next boot), dry-build (show what would be built).",
+      "tags": ["nixos", "build", "system"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": ["switch", "build", "test", "boot", "dry-build"],
+            "description": "Rebuild action."
+          }
+        },
+        "required": ["action"]
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "sudo nixos-rebuild UTCP_ARG_action_UTCP_END --flake path:/home/qwerty/NixOSenv",
+            "append_to_final_output": true
+          }
+        ],
+        "working_dir": "/home/qwerty/NixOSenv"
+      }
+    },
+    {
+      "name": "nix_garbage_collect",
+      "description": "Run nix garbage collection to free disk space by removing unused store paths.",
+      "tags": ["nixos", "maintenance", "disk"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "delete_older_than": {
+            "type": "string",
+            "description": "Delete roots older than this duration (e.g. '7d', '30d')."
+          }
+        }
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "nix-collect-garbage --delete-older-than UTCP_ARG_delete_older_than_UTCP_END",
+            "append_to_final_output": true
+          }
+        ],
+        "working_dir": "/home/qwerty/NixOSenv"
+      }
+    },
+    {
+      "name": "nix_store_optimise",
+      "description": "Optimise Nix store by hard-linking identical files. Reduces disk usage.",
+      "tags": ["nixos", "maintenance", "disk"],
+      "inputs": {
+        "type": "object",
+        "properties": {}
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "nix-store --optimise",
+            "append_to_final_output": true
+          }
+        ],
+        "working_dir": "/home/qwerty/NixOSenv"
+      }
+    },
+    {
+      "name": "nix_list_generations",
+      "description": "List NixOS system generations (boot entries). Shows current and available generations.",
+      "tags": ["nixos", "system", "info"],
+      "inputs": {
+        "type": "object",
+        "properties": {}
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "sudo nix-env --list-generations --profile /nix/var/nix/profiles/system",
+            "append_to_final_output": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "nix_list_packages",
+      "description": "Search for packages in nixpkgs. Use to find if a package is available and its attribute name.",
+      "tags": ["nixos", "packages", "search"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Package name or search term."
+          }
+        },
+        "required": ["query"]
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "nix search nixpkgs UTCP_ARG_query_UTCP_END",
+            "append_to_final_output": true
+          }
+        ]
+      }
+    }
+  ]
+}

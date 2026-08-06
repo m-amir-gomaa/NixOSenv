@@ -1,0 +1,36 @@
+{
+  "theme": "dark",
+  "permissions": {
+    "defaultMode": "acceptEdits"
+  },
+  "model": "deepseek-v4-flash",
+  "advisorModel": "opus",
+  "modelOverrides": {
+    "claude-opus-4-8": "deepseek-v4-pro",
+    "claude-sonnet-5": "deepseek-v4-flash",
+    "claude-haiku-4-5": "deepseek-v4-flash"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash \"/home/qwerty/.claude/plugins/cache/caveman/caveman/25d22f864ad6/src/hooks/caveman-statusline.sh\""
+  },
+  "autoMemoryEnabled": true,
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "notify-send 'Claude Code' 'Task complete — Claude is waiting' 2>/dev/null; echo -e '\\a'"
+          }
+        ]
+      }
+    ]
+  },
+  "custom_hooks": {
+    "post_load": [
+      "claude/code:load_claude0000_kitty_theme_config"
+    ]
+  }
+}

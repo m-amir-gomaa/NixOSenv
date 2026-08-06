@@ -2,7 +2,7 @@
   pkgs ? import <nixpkgs> { },
 }:
 
-pkgs.python3Packages.buildPythonApplication rec {
+pkgs.python314Packages.buildPythonApplication rec {
   pname = "autocommit";
   version = "1.0.0";
 
@@ -18,7 +18,7 @@ pkgs.python3Packages.buildPythonApplication rec {
     sed -i "s/\\\\ No newline/ No newline/g" autocommit.py
   '';
 
-  propagatedBuildInputs = with pkgs.python3Packages; [
+  propagatedBuildInputs = with pkgs.python314Packages; [
     openai
     pyyaml
   ];
@@ -32,7 +32,7 @@ pkgs.python3Packages.buildPythonApplication rec {
     cp autocommit.py $out/lib/autocommit/
 
     # We create a wrapper that runs the script with the correct python environment
-    makeWrapper ${pkgs.python3.withPackages (ps: with ps; [ openai pyyaml ])}/bin/python $out/bin/autocommit \
+    makeWrapper ${pkgs.python314.withPackages (ps: with ps; [ openai pyyaml ])}/bin/python $out/bin/autocommit \
       --add-flags "$out/lib/autocommit/autocommit.py" \
       --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.git ]}
   '';

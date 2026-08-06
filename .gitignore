@@ -4,7 +4,11 @@ result-*
 
 # ── Secrets ───────────────────────────────────────────────────────────────────
 secrets.nix
-.age-key.txt          # age private key — NEVER commit this
+# age private key — NEVER commit this
+.age-key.txt
+# UTCP live config — only templates (.example) are versioned, never the real files
+dotfiles/utcp/.env
+dotfiles/utcp/igintel-mcp.json
 
 # ── Python / Nix ──────────────────────────────────────────────────────────────
 __pycache__/
@@ -21,9 +25,12 @@ claude-flow.config.json
 ruflo-sync.py
 .stfolder
 .stfolder.removed-*
-.claude/              # Claude Code project config — local only
-.serena/              # Serena AI assistant state — local only
-.mcp.json             # MCP server config — local only
+# Claude Code project config — local only (tracked files stay tracked)
+.claude/
+# Serena AI assistant state — local only
+.serena/
+# MCP server config — local only (template is .mcp.json.example)
+.mcp.json
 
 # ── Accidental media files ────────────────────────────────────────────────────
 # These appear when download tools reconstruct absolute paths inside the repo
@@ -36,6 +43,13 @@ ruflo-sync.py
 nohup.out
 *.log
 
+# ── Family PC config (separate flash drive) ──────────────────────────────────
+family/
+
 # ── Scratch / test files ─────────────────────────────────────────────────────
 scratch/
 test-*.conf
+*.xlsx
+Untitled
+test.qml
+.zcompdump

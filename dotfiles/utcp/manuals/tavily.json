@@ -1,0 +1,243 @@
+{
+  "utcp_version": "1.0",
+  "tools": [
+    {
+      "name": "tavily_search",
+      "description": "Search the web for current information on any topic. Returns snippets and source URLs. Use for news, facts, or data beyond AI training cutoff.",
+      "tags": ["search", "web", "research"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "query": { "type": "string", "description": "Search query" },
+              "search_depth": {
+                "type": "string",
+                "enum": ["basic", "advanced", "fast", "ultra-fast"],
+                "description": "Depth of search."
+              },
+              "topic": { "type": "string", "enum": ["general"] },
+              "max_results": {
+                "type": "integer",
+                "description": "Maximum number of search results (5-20).",
+                "minimum": 5, "maximum": 20
+              },
+              "include_domains": {
+                "type": "array", "items": { "type": "string" },
+                "description": "List of domains to specifically include."
+              },
+              "exclude_domains": {
+                "type": "array", "items": { "type": "string" },
+                "description": "List of domains to specifically exclude."
+              },
+              "time_range": {
+                "type": "string", "enum": ["day", "week", "month", "year"],
+                "description": "Time range back from current date."
+              },
+              "include_raw_content": {
+                "type": "boolean",
+                "description": "Include cleaned and parsed HTML content."
+              }
+            },
+            "required": ["query"]
+          }
+        },
+        "required": ["body"]
+      },
+      "tool_call_template": {
+        "call_template_type": "http",
+        "url": "https://api.tavily.com/search",
+        "http_method": "POST",
+        "content_type": "application/json",
+        "body_field": "body",
+        "auth": {
+          "auth_type": "api_key",
+          "api_key": "Bearer $TAVILY_API_KEY",
+          "var_name": "Authorization",
+          "location": "header"
+        }
+      }
+    },
+    {
+      "name": "tavily_extract",
+      "description": "Extract content from URLs. Returns raw page content in markdown or text format.",
+      "tags": ["extract", "web", "content"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "urls": {
+                "type": "array", "items": { "type": "string" },
+                "description": "List of URLs to extract content from."
+              },
+              "extract_depth": {
+                "type": "string", "enum": ["basic", "advanced"],
+                "description": "Use 'advanced' for protected sites, tables, or embedded content."
+              },
+              "include_images": { "type": "boolean", "description": "Include images from pages." },
+              "format": {
+                "type": "string", "enum": ["markdown", "text"],
+                "description": "Output format."
+              },
+              "query": {
+                "type": "string",
+                "description": "Query to rerank content chunks by relevance."
+              }
+            },
+            "required": ["urls"]
+          }
+        },
+        "required": ["body"]
+      },
+      "tool_call_template": {
+        "call_template_type": "http",
+        "url": "https://api.tavily.com/extract",
+        "http_method": "POST",
+        "content_type": "application/json",
+        "body_field": "body",
+        "auth": {
+          "auth_type": "api_key",
+          "api_key": "Bearer $TAVILY_API_KEY",
+          "var_name": "Authorization",
+          "location": "header"
+        }
+      }
+    },
+    {
+      "name": "tavily_crawl",
+      "description": "Crawl a website starting from a URL. Extracts content from pages with configurable depth and breadth.",
+      "tags": ["crawl", "web", "research"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "url": { "type": "string", "description": "The root URL to begin the crawl." },
+              "max_depth": { "type": "integer", "description": "Max depth of crawl." },
+              "max_breadth": { "type": "integer", "description": "Max number of links to follow per level." },
+              "limit": { "type": "integer", "description": "Total number of links to process before stopping." },
+              "instructions": { "type": "string", "description": "Natural language instructions for the crawler." },
+              "select_paths": {
+                "type": "array", "items": { "type": "string" },
+                "description": "Regex patterns to select URL path patterns."
+              },
+              "select_domains": {
+                "type": "array", "items": { "type": "string" },
+                "description": "Regex patterns to restrict to specific domains."
+              },
+              "extract_depth": {
+                "type": "string", "enum": ["basic", "advanced"],
+                "description": "Advanced extraction retrieves more data including tables."
+              },
+              "format": {
+                "type": "string", "enum": ["markdown", "text"],
+                "description": "Format of extracted content."
+              }
+            },
+            "required": ["url"]
+          }
+        },
+        "required": ["body"]
+      },
+      "tool_call_template": {
+        "call_template_type": "http",
+        "url": "https://api.tavily.com/crawl",
+        "http_method": "POST",
+        "content_type": "application/json",
+        "body_field": "body",
+        "auth": {
+          "auth_type": "api_key",
+          "api_key": "Bearer $TAVILY_API_KEY",
+          "var_name": "Authorization",
+          "location": "header"
+        }
+      }
+    },
+    {
+      "name": "tavily_map",
+      "description": "Map a website's structure. Returns a list of URLs found starting from the base URL.",
+      "tags": ["map", "web", "discovery"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "url": { "type": "string", "description": "The root URL to begin the mapping." },
+              "max_depth": { "type": "integer", "description": "Max depth of the mapping." },
+              "max_breadth": { "type": "integer", "description": "Max number of links to follow per level." },
+              "limit": { "type": "integer", "description": "Total number of links to process before stopping." },
+              "instructions": { "type": "string", "description": "Natural language instructions for the crawler." },
+              "select_paths": {
+                "type": "array", "items": { "type": "string" },
+                "description": "Regex patterns to select URL path patterns."
+              },
+              "select_domains": {
+                "type": "array", "items": { "type": "string" },
+                "description": "Regex patterns to restrict to specific domains."
+              }
+            },
+            "required": ["url"]
+          }
+        },
+        "required": ["body"]
+      },
+      "tool_call_template": {
+        "call_template_type": "http",
+        "url": "https://api.tavily.com/map",
+        "http_method": "POST",
+        "content_type": "application/json",
+        "body_field": "body",
+        "auth": {
+          "auth_type": "api_key",
+          "api_key": "Bearer $TAVILY_API_KEY",
+          "var_name": "Authorization",
+          "location": "header"
+        }
+      }
+    },
+    {
+      "name": "tavily_research",
+      "description": "Perform comprehensive research on a given topic or question. Returns a detailed response based on research findings from multiple sources.",
+      "tags": ["research", "deep", "comprehensive"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "string",
+                "description": "A comprehensive description of the research task."
+              },
+              "model": {
+                "type": "string",
+                "enum": ["mini", "pro", "auto"],
+                "description": "Depth of research. 'mini' for narrow tasks, 'pro' for broad tasks, 'auto' selects best."
+              }
+            },
+            "required": ["input"]
+          }
+        },
+        "required": ["body"]
+      },
+      "tool_call_template": {
+        "call_template_type": "http",
+        "url": "https://api.tavily.com/research",
+        "http_method": "POST",
+        "content_type": "application/json",
+        "body_field": "body",
+        "auth": {
+          "auth_type": "api_key",
+          "api_key": "Bearer $TAVILY_API_KEY",
+          "var_name": "Authorization",
+          "location": "header"
+        }
+      }
+    }
+  ]
+}

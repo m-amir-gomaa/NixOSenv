@@ -1,0 +1,221 @@
+{
+  "load_variables_from": [
+    {
+      "variable_loader_type": "dotenv",
+      "env_file_path": "/home/qwerty/.utcp/.env"
+    }
+  ],
+  "tool_repository": {
+    "tool_repository_type": "in_memory"
+  },
+  "tool_search_strategy": {
+    "tool_search_strategy_type": "tag_and_description_word_match"
+  },
+  "post_processing": [
+    {
+      "tool_post_processor_type": "limit_strings",
+      "max_length": 6000
+    }
+  ],
+  "manual_call_templates": [
+    {
+      "name": "tavily",
+      "call_template_type": "file",
+      "file_path": "/home/qwerty/.utcp/manuals/tavily.json",
+      "allowed_communication_protocols": ["http"]
+    },
+    {
+      "name": "nixos",
+      "call_template_type": "file",
+      "file_path": "/home/qwerty/.utcp/manuals/nixos.json",
+      "allowed_communication_protocols": ["cli"]
+    },
+    {
+      "name": "system",
+      "call_template_type": "file",
+      "file_path": "/home/qwerty/.utcp/manuals/system.json",
+      "allowed_communication_protocols": ["cli"]
+    },
+    {
+      "name": "security",
+      "call_template_type": "file",
+      "file_path": "/home/qwerty/.utcp/manuals/security.json",
+      "allowed_communication_protocols": ["cli"]
+    },
+    {
+      "name": "recording",
+      "call_template_type": "file",
+      "file_path": "/home/qwerty/.utcp/manuals/recording.json",
+      "allowed_communication_protocols": ["cli"]
+    },
+    {
+      "name": "igintel",
+      "call_template_type": "file",
+      "file_path": "/home/qwerty/.utcp/manuals/igintel.json",
+      "allowed_communication_protocols": ["cli"]
+    },
+    {
+      "name": "github_api",
+      "call_template_type": "http",
+      "http_method": "GET",
+      "url": "https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.json",
+      "content_type": "application/json"
+    },
+    {
+      "name": "dev_tools",
+      "call_template_type": "mcp",
+      "config": {
+        "mcpServers": {
+          "github": {
+            "transport": "stdio",
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-github"],
+            "env": {
+              "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+            }
+          },
+          "filesystem": {
+            "transport": "stdio",
+            "command": "npx",
+            "args": [
+              "-y",
+              "@modelcontextprotocol/server-filesystem",
+              "/home/qwerty"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "data_stores",
+      "call_template_type": "mcp",
+      "config": {
+        "mcpServers": {
+          "postgres": {
+            "transport": "stdio",
+            "command": "uvx",
+            "args": ["postgres-mcp", "--access-mode=restricted"],
+            "env": {
+              "DATABASE_URI": "${POSTGRES_DATABASE_URI}"
+            }
+          },
+          "redis": {
+            "transport": "stdio",
+            "command": "uvx",
+            "args": [
+              "--from",
+              "redis-mcp-server@latest",
+              "redis-mcp-server",
+              "--url",
+              "${REDIS_URL}"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "web_frontend",
+      "call_template_type": "mcp",
+      "config": {
+        "mcpServers": {
+          "playwright": {
+            "transport": "stdio",
+            "command": "npx",
+            "args": ["-y", "@playwright/mcp@latest"],
+            "env": {
+              "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH": "/run/current-system/sw/bin/google-chrome-stable"
+            }
+          },
+          "chrome-devtools": {
+            "transport": "stdio",
+            "command": "npx",
+            "args": ["-y", "chrome-devtools-mcp@latest"]
+          },
+          "context7": {
+            "transport": "stdio",
+            "command": "npx",
+            "args": ["-y", "@upstash/context7-mcp"]
+          }
+        }
+      }
+    },
+    {
+      "name": "reasoning",
+      "call_template_type": "mcp",
+      "config": {
+        "mcpServers": {
+          "memory": {
+            "transport": "stdio",
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-memory"]
+          },
+          "sequential-thinking": {
+            "transport": "stdio",
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+          }
+        }
+      }
+    },
+    {
+      "name": "docker_ops",
+      "call_template_type": "mcp",
+      "config": {
+        "mcpServers": {
+          "docker": {
+            "transport": "stdio",
+            "command": "npx",
+            "args": ["-y", "mcp-docker-server"]
+          }
+        }
+      }
+    },
+    {
+      "name": "ui_ux",
+      "call_template_type": "mcp",
+      "config": {
+        "mcpServers": {
+          "mcp-color-convert": {
+            "transport": "stdio",
+            "command": "npx",
+            "args": ["-y", "mcp-color-convert"]
+          }
+        }
+      }
+    },
+    {
+      "name": "figma",
+      "call_template_type": "mcp",
+      "config": {
+        "mcpServers": {
+          "figma-console": {
+            "transport": "stdio",
+            "command": "npx",
+            "args": ["-y", "figma-console-mcp"],
+            "env": {
+              "FIGMA_ACCESS_TOKEN": "${FIGMA_ACCESS_TOKEN}"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "gitlab",
+      "call_template_type": "mcp",
+      "config": {
+        "mcpServers": {
+          "gitlab": {
+            "transport": "stdio",
+            "command": "npx",
+            "args": ["-y", "@structured-world/gitlab-mcp"],
+            "env": {
+              "GITLAB_URL": "${GITLAB_URL}",
+              "GITLAB_TOKEN": "${GITLAB_TOKEN}"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
+

@@ -30,21 +30,32 @@
 {
   imports = [
     ./hardware-configuration.nix
+    ./sddm-kwin-numlock.nix
     ./cachix.nix
     ./modules/auto-git-nixosenv.nix
     ./modules/mineru.nix
+    ./blocky.nix
   ];
 
   # ── Boot ──────────────────────────────────────────────────────────────────
   boot.loader.systemd-boot.enable = true;
+  # Keep only the 10 most recent NixOS generations in the boot menu.
+  # Without a limit the menu grows forever and EFI partition fills up.
   boot.loader.systemd-boot.configurationLimit = 10;
   boot.loader.efi.canTouchEfiVariables = true;
+  # Block the open-source Nouveau driver — it conflicts with the proprietary
+  # NVIDIA driver and can cause boot failures or rendering corruption.
   boot.blacklistedKernelModules = [ "nouveau" ];
   boot.kernelParams = [
-    "nvidia-drm.modeset=1"
-    "nvidia-drm.fbdev=1"
-    "nvidia.NVreg_PreserveVideoMemoryAllocations=1"
+    "nvidia-drm.modeset=1" # Required for Wayland: enables kernel DRM modesetting for NVIDIA
+    "nvidia-drm.fbdev=1" # Exposes an fbdev node so early console and Plymouth work
+    "nvidia.NVreg_PreserveVideoMemoryAllocations=1" # Needed for suspend/resume: preserves VRAM across sleep
+    "pcie_aspm=off" # Disable PCIe Active State Power Management — prevents GPU stutter
+    "nvme_core.default_ps_max_latency_us=0" # Disable NVMe power states — avoids latency spikes on reads
   ];
+  # Enable ARM64 emulation via QEMU binfmt_misc.
+  # Allows running aarch64 binaries transparently (e.g. `docker buildx` cross-builds,
+  # testing ARM containers, running ARM Go/Rust binaries directly).
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
   # Disable iwlwifi + iwlmvm power saving at the kernel driver level.
@@ -62,6 +73,18 @@
   systemd.network.enable = true;
   networking.useNetworkd = true;
   networking.firewall.enable = false;
+
+  # Non-FHS compat: some tools (e.g. utcp CLI executor) hardcode /bin/bash,
+  # which NixOS does not provide. Symlink it to the real bash.
+  systemd.tmpfiles.rules = [
+    "L+ /bin/bash - - - - /run/current-system/sw/bin/bash"
+  ];
+
+  # Pin search.nixos.org to its IP to bypass DNS censorship (ISP blocks it in Egypt).
+  # Without this, `nix search nixpkgs ...` hangs waiting for DNS resolution.
+  networking.hosts = {
+    "104.198.14.52" = [ "search.nixos.org" ];
+  };
 
   # iwd — lightweight Wi-Fi connection daemon (replaces wpa_supplicant)
   networking.wireless.iwd = {
@@ -81,12 +104,18 @@
     "10-wlan" = {
       matchConfig.Name = "wlan0";
       networkConfig.DHCP = "yes";
-      dhcpV4Config = { UseDNS = false; UseDomains = false; };
+      dhcpV4Config = {
+        UseDNS = false;
+        UseDomains = false;
+      };
     };
     "20-eth" = {
       matchConfig.Name = "enp3s0";
       networkConfig.DHCP = "yes";
-      dhcpV4Config = { UseDNS = false; UseDomains = false; };
+      dhcpV4Config = {
+        UseDNS = false;
+        UseDomains = false;
+      };
     };
   };
 
@@ -97,7 +126,7 @@
       DNS = "8.8.8.8 1.1.1.1";
       FallbackDNS = "9.9.9.9";
       DNSOverTLS = "no";
-      DNSSEC = "allow-downgrade";
+      DNSSEC = "false";
       Domains = "~.";
     };
   };
@@ -122,10 +151,24 @@
   services.displayManager.sddm = {
     enable = true;
     wayland.enable = true;
+    wayland.compositor = "kwin";
+    autoNumlock = true;
+    theme = "where_is_my_sddm_theme";
+    extraPackages = with pkgs; [
+      kdePackages.qt5compat
+      kdePackages.qtsvg
+    ];
   };
 
+  # ── Prevent nixos-rebuild switch from killing the running Hyprland session ──
+  # Without this, switch-to-configuration restarts display-manager.service on
+  # every rebuild (even if nothing display-related changed), which sends SIGTERM
+  # to SDDM → your entire Wayland/Hyprland session dies and the screen goes black.
+  # Changes to SDDM config take effect on the NEXT login without this flag.
+  systemd.services.display-manager.restartIfChanged = false;
+
   services.displayManager.autoLogin = {
-    enable = true;
+    enable = false;
     user = "qwerty";
   };
 
@@ -143,7 +186,7 @@
     open = false;
     nvidiaSettings = true;
     powerManagement.enable = true;
-    package = config.boot.kernelPackages.nvidiaPackages.production;
+    package = config.boot.kernelPackages.nvidiaPackages.legacy_535;
     prime = {
       offload.enable = true;
       offload.enableOffloadCmd = true;
@@ -153,8 +196,25 @@
   };
 
   # ── Audio (PipeWire) ──────────────────────────────────────────────────────
+  # PulseAudio and PipeWire conflict — disable PulseAudio so PipeWire's
+  # compatibility shim (services.pipewire.pulse.enable) can own the socket.
   services.pulseaudio.enable = false;
+  # rtkit (RealtimeKit) lets PipeWire request real-time thread scheduling
+  # from the kernel without running as root. Required for glitch-free audio.
   security.rtkit.enable = true;
+  # Allow qwerty to run all commands without password.
+  # Needed for: nixos-rebuild, USB mount/fsck, systemctl, etc.
+  security.sudo.extraRules = [
+    {
+      users = [ "qwerty" ];
+      commands = [
+        {
+          command = "ALL";
+          options = [ "NOPASSWD" ];
+        }
+      ];
+    }
+  ];
   services.pipewire = {
     enable = true;
     alsa.enable = true;
@@ -164,8 +224,6 @@
   };
 
   services.printing.enable = true;
-
-
 
   # ── AI & Search (Ollama + SearXNG) ──────────────────────────────────────────
   services.ollama = {
@@ -272,7 +330,11 @@
   programs.zsh.enable = true;
   users.defaultUserShell = pkgs.zsh;
   programs.firefox.enable = true;
+  # dconf is a key/value settings database used by GTK/GNOME apps.
+  # Required by: gnome-keyring, nautilus, pavucontrol, and some Hyprland plugins.
   programs.dconf.enable = true;
+  # qt.enable installs platform integration packages (qt5ct, Breeze style)
+  # so Qt apps respect dark mode and don't look broken on a non-KDE desktop.
   qt.enable = true;
   nixpkgs.config.allowUnfree = true;
 
@@ -281,9 +343,72 @@
     "flakes"
   ];
 
-  # ── System packages ───────────────────────────────────────────────────────
   environment.systemPackages = with pkgs; [
+    (
+      (where-is-my-sddm-theme.override {
+        variants = [ "qt6" ];
+        themeConfig.General = {
+          passwordTextColor = "white";
+          cursorColor = "white";
+        };
+      }).overrideAttrs
+      (old: {
+        # Patch Main.qml to inject a live clock above the password field.
+        # sed cannot reliably do multiline replacements inside a Nix string literal,
+        # so we use Python's str.replace() which handles it correctly.
+        installPhase = (old.installPhase or "") + ''
+                  QML=$out/share/sddm/themes/where_is_my_sddm_theme/Main.qml
+                  ${pkgs.python3}/bin/python3 - "$QML" <<'PYEOF'
+          import sys
+
+          path = sys.argv[1]
+          with open(path, 'r') as f:
+              content = f.read()
+
+          content = content.replace("import QtQuick 2.15", "import QtQuick 2.15\nimport QtQml", 1)
+
+          clock_qml = """        Text {
+                      id: clockLabel
+                      anchors.horizontalCenter: passwordInput.horizontalCenter
+                      anchors.bottom: passwordInput.top
+                      anchors.bottomMargin: 80
+                      color: "white"
+                      style: Text.Outline
+                      styleColor: "black"
+                      font.pointSize: 48
+                      font.bold: true
+                      z: 100
+
+                      function updateTime() {
+                          var d = new Date();
+                          var h = d.getHours();
+                          var m = d.getMinutes();
+                          text = (h < 10 ? "0" + h : h) + ":" + (m < 10 ? "0" + m : m);
+                      }
+
+                      Component.onCompleted: updateTime()
+
+                      Timer {
+                          interval: 1000
+                          running: true
+                          repeat: true
+                          onTriggered: clockLabel.updateTime()
+                      }
+                  }
+                  """
+
+          needle = "        Component.onCompleted: {"
+          content = content.replace(needle, clock_qml + needle, 1)
+
+          with open(path, 'w') as f:
+              f.write(content)
+          PYEOF
+        '';
+      })
+    )
+    ntfs3g
     # Core tools
+    chromium
     qbittorrent
     marksman
     icu
@@ -311,6 +436,8 @@
     tparted
     rsync
     gdb
+    torsocks
+    texliveFull
 
     # Terminal
     kitty
@@ -327,6 +454,19 @@
     zenity
     wl-screenrec
     obs-studio
+
+    # Recording — terminal + screen (automated demos)
+    #  • vhs          → scripted terminal videos (.tape → mp4/gif/webm)
+    #  • ttyd         → VHS runtime dep (terminal served over websocket)
+    #  • chromium     → VHS headless renderer (go-rod); needs a system browser
+    #  • asciinema    → lightweight terminal capture (.cast, interactive replay)
+    #  • asciinema-agg→ asciicast → animated GIF
+    vhs
+    ttyd
+    chromium
+    asciinema
+    asciinema-agg
+
     wl-clipboard
     cliphist
     wl-clip-persist
@@ -361,13 +501,20 @@
     kdePackages.qtstyleplugin-kvantum # Qt6 Kvantum engine
 
     # Python
-    (python313.withPackages (
+    ((python314.override {
+      packageOverrides = self: super: {
+        # rtoml: segfault in tests on Python 3.14 (transitive dep of manim-slides)
+        rtoml = super.rtoml.overrideAttrs (_: {
+          doInstallCheck = false;
+        });
+      };
+    }).withPackages (
       ps: with ps; [
         pip
         pyqt6
         matplotlib
         # pyqtgraph 0.14.0: SVGExporter.py:427 crashes on single-token SVG path
-        # commands (e.g. "M", "L") under Python 3.13. Tests run via installCheck
+        # commands (e.g. "M", "L") under Python 3.14. Tests run via installCheck
         # phase (pytestCheckHook). doInstallCheck = false suppresses that phase.
         (ps.pyqtgraph.overrideAttrs (_: {
           doInstallCheck = false;
@@ -378,6 +525,9 @@
         pyyaml
         openai
         python-dotenv
+        manim
+        manim-slides
+        py
       ]
     ))
     sqlite
@@ -406,6 +556,7 @@
     gofumpt
     inotify-tools
     imagemagick
+    psmisc # fuser, killall, pstree
 
     # Apps & utilities
     discord
@@ -426,6 +577,7 @@
     gnupg
     zip
     age
+    cryptsetup
 
     anki-bin
     tauon
@@ -532,12 +684,23 @@
 
   # ── Environment variables ─────────────────────────────────────────────────
   environment.variables = {
+    # Force VA-API (video acceleration) to use the NVIDIA driver globally.
+    # Individual commands that need Intel VA-API (e.g. wl-screenrec) override
+    # this per-invocation with LIBVA_DRIVER_NAME=iHD.
     LIBVA_DRIVER_NAME = "nvidia";
     XDG_SESSION_TYPE = "wayland";
-    GBM_BACKEND = "nvidia-drm";
+    # Tell Mesa's GLX dispatch to use the NVIDIA vendor library instead of
+    # the default llvmpipe or radeon path. Required for NVIDIA + Wayland.
     __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+    # NVIDIA KMS cursors are broken in wlroots-based compositors (Hyprland).
+    # This flag forces software cursor rendering, fixing invisible/glitchy cursors.
     WLR_NO_HARDWARE_CURSORS = "1";
+    # Hint Electron-based apps (VS Code, Discord, etc.) to use native Wayland
+    # via the --ozone-platform=wayland flag. Without this they run via XWayland
+    # and look blurry on HiDPI or have input lag.
     NIXOS_OZONE_WL = "1";
+    # Pass ANSI escape codes (colours) through `less` without stripping them.
+    # Affects `git log`, `man`, and any pager output with colour.
     LESS = "-R";
   };
 
@@ -550,15 +713,41 @@
     WIFI_PWR_ON_AC = "off";
     WIFI_PWR_ON_BAT = "off";
   };
+  # power-profiles-daemon conflicts with TLP — both manage CPU governors and
+  # power modes. Only one can win; TLP wins because it has battery thresholds.
   services.power-profiles-daemon.enable = false;
 
   services.gnome.gnome-keyring.enable = true;
   security.pam.services.login.enableGnomeKeyring = true;
+  # Register hyprlock as a PAM service so it can authenticate against
+  # /etc/shadow (or GNOME keyring). Without this, hyprlock silently fails
+  # to verify any password and you get locked out permanently.
+  security.pam.services.hyprlock = { };
+
+  # pam_mount auto-mounts an encrypted disk image when qwerty logs in.
+  # .projects.img is a LUKS-encrypted loop device; it surfaces as ~/Projects.
+  # discard passes TRIM commands through the loop device into the image file,
+  # keeping the sparse file compact on the host SSD.
+  security.pam.mount = {
+    enable = true;
+    extraVolumes = [
+      "<volume user=\"qwerty\" fstype=\"crypt\" path=\"/home/qwerty/.projects.img\" mountpoint=\"/home/qwerty/Projects\" options=\"loop,discard\" />"
+    ];
+  };
 
   # ── Systemd integration ───────────────────────────────────────────────────
   services.timesyncd.enable = true;
+  # Run fstrim weekly to discard unused SSD blocks. Maintains write performance
+  # and longevity on NAND flash. Safe on all modern SSDs and loop devices.
   services.fstrim.enable = true;
   systemd.coredump.enable = true;
+  systemd.coredump.settings.Coredump = {
+    MaxUse = "5G";
+    KeepFree = "20G";
+  };
+  # systemd-machined manages container/VM machine records.
+  # Required by libvirtd for proper machine registration; without it,
+  # virt-manager shows warnings and some guest features break.
   systemd.services.systemd-machined.enable = true;
 
   # ── Filesystem mounts ─────────────────────────────────────────────────────
@@ -588,18 +777,38 @@
     ];
   };
 
+  fileSystems."/var/lib/systemd/coredump" = {
+    device = "/THE_VAULT/coredumps";
+    fsType = "none";
+    options = [ "bind" "nofail" ];
+  };
+
   # ── Misc ──────────────────────────────────────────────────────────────────
+  services.tor = {
+    enable = true;
+    # SOCKS client disabled: the always-on 127.0.0.1:9050 proxy causes
+    # Cloudflare (Upwork, etc.) to flag requests routed through Tor exit nodes.
+    # Use `torsocks <cmd>` for on-demand Tor routing instead.
+    client.enable = false;
+  };
+
   system.stateVersion = "25.11";
 
   services.dbus.packages = [ pkgs.glib ];
 
   programs.appimage = {
     enable = true;
+    # Register AppImage as a binfmt_misc handler so AppImages run directly
+    # without needing `appimage-run` wrapper every time.
     binfmt = true;
   };
+  # nix-ld creates a fake dynamic linker stub at /lib/ld-linux-x86-64.so.2
+  # (and /lib64/). Without this, pre-built ELF binaries (pip wheels, vendor
+  # tools, AppImages) fail with "No such file or directory" because NixOS
+  # doesn't have glibc at the FHS path they expect.
   programs.nix-ld.enable = true;
   programs.nix-ld.libraries = with pkgs; [
-    stdenv.cc.cc.lib
+    stdenv.cc.cc.lib # libstdc++.so and libgcc_s.so — required by most C++ binaries
   ];
 
   nix.gc.automatic = true;
@@ -610,18 +819,26 @@
   nix.optimise.dates = [ "weekly" ];
   nix.settings.min-free = 10737418240; # 10GB
   nix.settings.max-free = 21474836480; # 20GB
+  nix.settings.max-jobs = 2;
+  nix.settings.cores = 4;
 
   programs.virt-manager.enable = true;
   users.groups.libvirtd.members = [ "qwerty" ];
   virtualisation.libvirtd.enable = true;
-  virtualisation.docker.enable = true;
+  # virtualisation.docker.enable = true; # Removed per user request
+  # SPICE USB redirection allows passing USB devices from host into VMs
+  # managed by virt-manager. Requires the spice-vdagentd service and a
+  # SPICE graphics channel in the guest XML config.
   virtualisation.spiceUSBRedirection.enable = true;
 
   services.journald.extraConfig = ''
     SystemMaxUse=500M
     RuntimeMaxUse=100M
   '';
-  programs.browserpass.enable = true; # browser integration
+  # browserpass is a browser extension host for the `pass` password manager.
+  # It lets Firefox/Chrome extensions read passwords from ~/.password-store
+  # via native messaging (no clipboard, no xdotool hacks).
+  programs.browserpass.enable = true;
   # ── Syncthing ─────────────────────────────────────────────────────────────
   services.syncthing = {
     enable = true;
@@ -630,18 +847,19 @@
     configDir = "/home/qwerty/.config/syncthing";
     openDefaultPorts = true;
   };
-  systemd.services.disk-space-alert = {
-    description = "Warn when root partition exceeds 85%";
+  systemd.user.services.disk-space-alert = {
+    description = "Warn when root partition exceeds 80%";
     serviceConfig = {
       Type = "oneshot";
       ExecStart = pkgs.writeShellScript "disk-space-alert" ''
         USAGE=$(${pkgs.coreutils}/bin/df / | ${pkgs.gawk}/bin/awk 'NR==2 {print $5}' | tr -d '%')
-        if [ "$USAGE" -gt 85 ]; then
+        if [ "$USAGE" -gt 80 ]; then
+          ${pkgs.libnotify}/bin/notify-send -u critical "Disk Space Alert" "Root partition is at $USAGE%"
           ${pkgs.util-linux}/bin/wall "WARNING: Root partition at $USAGE%"
         fi
       '';
     };
-    startAt = "daily";
+    startAt = "hourly";
   };
 
   # Automated Lean Profile Maintenance
@@ -653,5 +871,57 @@
       ExecStart = "${pkgs.nix}/bin/nix profile wipe-history --older-than 7d";
     };
     startAt = "weekly";
+  };
+
+  # rsync Music/Projects/Downloads → /THE_VAULT/backups (no --delete: backups retain
+  # files removed from live dirs, so phone synced from backup never loses files)
+  systemd.services.backup-to-vault = {
+    description = "rsync Music/Projects/Downloads to /THE_VAULT/backups";
+    serviceConfig = { Type = "oneshot"; User = "qwerty"; };
+    path = [ pkgs.rsync pkgs.coreutils ];
+    script = ''
+      set -e
+      D=/THE_VAULT/backups
+      rsync -a --quiet /THE_VAULT/Music/     "$D/Music/"
+      # Projects LUKS loop may be unmounted → dir empty → rsync no-op, dest untouched
+      # lost+found is root-owned fs metadata → exclude (perms fail otherwise)
+      rsync -a --quiet --exclude='lost+found' --exclude='.git/' --exclude='node_modules/' \
+        --exclude='target/' /home/qwerty/Projects/ "$D/Projects/"
+      rsync -a --quiet /THE_VAULT/Downloads/ "$D/Downloads/"
+      date -Is >> "$D/last-run.log"
+    '';
+    startAt = "hourly";
+  };
+
+  # ── Swap ──────────────────────────────────────────────────────────────────
+  # Add 8 GB swapfile to prevent OOM hard-lockups when running LLMs or heavy tasks
+  swapDevices = [
+    {
+      device = "/var/lib/swapfile";
+      size = 8192;
+    }
+  ];
+
+  zramSwap.enable = true;
+  zramSwap.memoryMax = 4294967296; # 4GB
+  zramSwap.algorithm = "zstd";
+
+  systemd.oomd.enableUserSlices = true;
+
+  services.borgbackup.jobs."vault" = {
+    paths = [
+      "/home/qwerty/.projects.img"
+      "/home/qwerty/.local/share/Anki2"
+      "/home/qwerty/.mozilla"
+      "/home/qwerty/.config/google-chrome"
+      "/home/qwerty/Learning"
+      "/home/qwerty/Documents"
+      "/home/qwerty/.ssh"
+      "/home/qwerty/.config/autocommit/secrets.env"
+    ];
+    repo = "/THE_VAULT/borg-backup";
+    encryption.mode = "none";
+    startAt = "weekly";
+    doInit = true;
   };
 }

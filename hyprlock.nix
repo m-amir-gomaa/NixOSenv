@@ -5,23 +5,23 @@
     enable = true;
     settings = {
       general = {
-        disable_loading_bar = true;
-        hide_cursor = true;
-        grace = 0;
-        no_fade_in = false;
+        disable_loading_bar = true;  # hide the spinner shown while hyprlock initialises
+        hide_cursor = true;          # hide mouse cursor while locked (security + aesthetics)
+        grace = 0;                   # seconds before password is required (0 = immediate)
+        no_fade_in = false;          # animate the lock screen fade-in
       };
 
       background = [
         {
           # Automatically uses a blurred screenshot of the screen as the lockscreen background
           path = "screenshot";
-          blur_passes = 3;
-          blur_size = 7;
-          noise = 0.0117;
-          contrast = 0.8916;
-          brightness = 0.7; # slightly dimmed
-          vibrancy = 0.1696;
-          vibrancy_darkness = 0.0;
+          blur_passes = 3;         # number of box-blur iterations (more = blurrier, slower)
+          blur_size = 7;           # kernel radius per pass
+          noise = 0.0117;          # grain overlay to break up banding artifacts
+          contrast = 0.8916;       # slightly lower contrast to let text read cleanly
+          brightness = 0.7;        # slightly dimmed
+          vibrancy = 0.1696;       # HSL saturation boost after dimming (keeps colours from going grey)
+          vibrancy_darkness = 0.0; # only apply vibrancy to light tones (0 = all tones equally)
         }
       ];
 
@@ -29,8 +29,8 @@
         {
           size = "280, 50";
           outline_thickness = 2;
-          dots_size = 0.22; # Scale of input-field height
-          dots_spacing = 0.2; # Scale of dots' absolute size
+          dots_size = 0.22;    # dot diameter as fraction of input field height
+          dots_spacing = 0.2;  # gap between dots as fraction of dot diameter
           dots_center = true;
           
           # Colors matching your dark aesthetic
@@ -38,18 +38,19 @@
           inner_color = "rgba(10, 10, 10, 0.6)";
           font_color = "rgba(240, 240, 240, 0.9)";
           
-          fade_on_empty = false;
+          fade_on_empty = false;  # keep placeholder text visible even after typing starts
           placeholder_text = "<i>Enter password to unlock...</i>";
           hide_input = false;
           
+          # Position: x=0 (centred), y=-100 (100px below vertical centre)
           position = "0, -100";
           halign = "center";
           valign = "center";
           
           # Visual feedback on caps lock or validation errors
           fail_color = "rgba(200, 50, 50, 1.0)";
-          fail_text = "<i>$FAIL <b>($ATTEMPTS)</b></i>";
-          fail_transition = 300; # ms
+          fail_text = "<i>$FAIL <b>($ATTEMPTS)</b></i>"; # $FAIL = PAM error string, $ATTEMPTS = count
+          fail_transition = 300; # ms fade from normal to fail colour
         }
       ];
 

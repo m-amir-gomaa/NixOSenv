@@ -35,7 +35,7 @@
     vimAlias = true; # `vim` → nvim
 
     withRuby = false;
-    withPython3 = false;
+    withPython3 = true;
 
     # ── Neovim Plugins (Nix-Managed) ─────────────────────────────────────────
     # We manage some plugins via Nix to ensure binary dependencies (like
@@ -90,7 +90,7 @@
       # ── Debug adapters ────────────────────────────────────────────────────
       delve # Go debugger (used by nvim-dap)
       lldb # C/C++/Rust debugger
-      python313Packages.debugpy # Python debugger
+      python314Packages.debugpy # Python debugger
 
       # ── Other tools Neovim plugins shell out to ───────────────────────────
       icu # Unicode data library (required by some LSPs)

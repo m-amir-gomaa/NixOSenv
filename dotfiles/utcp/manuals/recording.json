@@ -1,0 +1,60 @@
+{
+  "utcp_version": "1.0",
+  "tools": [
+    {
+      "name": "record_demo_render",
+      "description": "Render a VHS .tape script to a publishable video (mp4/webm/gif) — deterministic terminal demos. Terminal-only recording: write a .tape describing the session (Type/Enter/Sleep/Wait+Screen /regex/), run this, get a clean video. The tape's Output path is relative to outdir, so use a bare filename there. Requires vhs + ttyd + chromium + ffmpeg (all system-installed).",
+      "tags": ["record", "video", "vhs", "demo", "terminal", "publish"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "tape": {
+            "type": "string",
+            "description": "Absolute path to the .tape file."
+          },
+          "outdir": {
+            "type": "string",
+            "description": "Absolute directory to run vhs from; the tape's Output file lands here."
+          }
+        },
+        "required": ["tape", "outdir"]
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "cd \"UTCP_ARG_outdir_UTCP_END\" && vhs \"UTCP_ARG_tape_UTCP_END\"",
+            "append_to_final_output": true
+          }
+        ],
+        "working_dir": "/home/qwerty"
+      }
+    },
+    {
+      "name": "record_screen",
+      "description": "Drive live screen recording (wl-screenrec, chunked for clean pause/resume). Use for GUI/desktop demos, not terminal-only ones (use record_demo_render for those). Actions: start-video (silent), start-internal (+desktop audio), start-mic (+microphone), pause (clean chunk boundary, no timeline gap), stop (ffmpeg-concat chunks -> ~/Videos/rec-*.mp4). Keyboard binds mirror this: Super+R/W/T start, Super+P pause/resume, Super+S stop.",
+      "tags": ["record", "screen", "video", "wl-screenrec", "gui"],
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": ["start-video", "start-internal", "start-mic", "pause", "stop"],
+            "description": "Recording action to perform."
+          }
+        },
+        "required": ["action"]
+      },
+      "tool_call_template": {
+        "call_template_type": "cli",
+        "commands": [
+          {
+            "command": "case \"UTCP_ARG_action_UTCP_END\" in start-video) ~/NixOSenv/scripts/record.sh toggle video;; start-internal) ~/NixOSenv/scripts/record.sh toggle internal;; start-mic) ~/NixOSenv/scripts/record.sh toggle mic;; pause) ~/NixOSenv/scripts/record.sh toggle-pause;; stop) ~/NixOSenv/scripts/record.sh stop;; esac",
+            "append_to_final_output": true
+          }
+        ],
+        "working_dir": "/home/qwerty"
+      }
+    }
+  ]
+}

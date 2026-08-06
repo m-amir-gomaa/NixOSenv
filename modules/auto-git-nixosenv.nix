@@ -66,6 +66,10 @@ in
   systemd.user.services.auto-git-autocommit = {
     description = "AI-powered Autocommit for ~/NixOSenv";
     wantedBy = [ "default.target" ];
+    unitConfig = {
+      ConditionUser = "qwerty";
+      ConditionPathExists = "%h/.config/autocommit/secrets.env";
+    };
 
     serviceConfig = {
       # EnvironmentFile: load secrets from this file into the service env.
@@ -76,19 +80,14 @@ in
       WorkingDirectory = repoDir;
 
       # ExecStart: a Nix-generated shell script.
-      # Using writeShellScript ensures:
-      #   a) The script is stored immutably in the Nix store.
-      #   b) All tool paths are absolute (no PATH dependency at runtime).
-      #   c) set -euo pipefail makes any unhandled error abort the service so
-      #      systemd can restart it cleanly rather than silently continuing.
       ExecStart = pkgs.writeShellScript "autocommit-wrapper" ''
         #!/usr/bin/env bash
-        # set -euo pipefail makes the script strict:
-        #   -e  exit immediately if any command fails
-        #   -u  treat unset variables as errors (catches typos)
-        #   -o pipefail  if any command in a pipe fails, the whole pipe fails
-        # Together these prevent silent failures that are hard to debug.
         set -euo pipefail
+
+        # No API key configured → exit cleanly (exit 0 = no restart, no journal spam)
+        if [ -z "''${AUTOCOMMIT_API_KEY:-}" ]; then
+          exit 0
+        fi
 
         GIT="${pkgs.git}/bin/git"
         SSH="${pkgs.openssh}/bin/ssh"
@@ -207,7 +206,7 @@ in
 
       # Restart the service 10 seconds after any failure (e.g. network blip,
       # API error, git conflict) so commit coverage is robust.
-      Restart = "always";
+      Restart = "on-failure";
       RestartSec = "10s";
     };
   };

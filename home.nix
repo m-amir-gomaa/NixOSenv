@@ -12,11 +12,17 @@
     ./hyprland.nix
     ./waybar.nix
     ./swaync.nix
+    ./hyprlock.nix
+    ./hypridle.nix
   ];
 
   home.username = "qwerty";
   home.homeDirectory = "/home/qwerty";
+  # stateVersion pins the Home Manager activation format.
+  # Never change this after first activation — it can break stateful services.
   home.stateVersion = "25.05";
+  # Suppress the warning when nixpkgs version doesn't match home-manager release.
+  # Safe because we control both via the flake lock.
   home.enableNixpkgsReleaseCheck = false;
 
   programs.home-manager.enable = true;
@@ -24,6 +30,23 @@
   # Install home-manager CLI package explicitly
   home.packages = with pkgs; [
     home-manager
+    (python3.withPackages (ps: with ps; [
+      manim
+      numpy
+      scipy
+      matplotlib
+      pandas
+      scikit-learn
+      sympy
+      torch
+      torchaudio
+      torchvision
+    ]))
+    ffmpeg
+    texlive.combined.scheme-full
+    cairo
+    pango
+    pkg-config
   ];
 
   programs.git = {
@@ -45,13 +68,18 @@
   };
 
   home.sessionVariables = {
+    # Required by .NET runtime to avoid ICU (Unicode library) errors on
+    # systems without full locale data. Some Python/dotnet tools need this.
     DOTNET_SYSTEM_GLOBALIZATION_INVARIANT = "1";
     XDG_SESSION_TYPE = "wayland";
     XDG_CURRENT_DESKTOP = "Hyprland";
     XDG_SESSION_DESKTOP = "Hyprland";
+    # Tell Firefox to use the native Wayland backend instead of XWayland.
+    # Gives proper HiDPI, smoother scrolling, and working screen sharing.
     MOZ_ENABLE_WAYLAND = "1";
     GTK_THEME = "Adwaita:dark";
-    TAVILY_API_KEY = "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";
+    # Set in ~/.zshrc_secrets — NEVER hardcode API keys in committed files
+    TAVILY_API_KEY = "$TAVILY_API_KEY";
   };
 
   # ── GTK theming ──────────────────────────────────────────────────────────
@@ -75,6 +103,9 @@
     gtk4.extraConfig.gtk-application-prefer-dark-theme = 1;
   };
 
+  # dconf keys mirror the GNOME settings database, which GTK4 apps read
+  # directly (ignoring gtk3.extraConfig). This ensures Nautilus, GNOME apps,
+  # and any XDG-portal-using app see dark mode.
   dconf.settings = {
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";
@@ -83,6 +114,8 @@
     };
   };
 
+  # platformTheme = gtk3 tells Qt apps to load their style from the GTK3
+  # settings, so they match the dark Adwaita theme automatically.
   qt = {
     enable = true;
     platformTheme.name = "gtk3";
@@ -262,8 +295,7 @@
       o = "xdg-open";
       gpl = "git pull";
 
-      # ── claude-code ───────────────────────────────────────────────────────
-      ai = "unset __HM_SESS_VARS_SOURCED && source /etc/profiles/per-user/qwerty/etc/profile.d/hm-session-vars.sh && claude";
+      # ── claude-code: 'ai' function defined in dotfiles/zsh/.zshrc ────────
 
       # ── LM Studio ────────────────────────────────────────────────────────
       lmstudio = "lm-studio --enable-features=WaylandWindowDecorations --ozone-platform-hint=auto";
@@ -287,10 +319,7 @@
       export NPM_CONFIG_PREFIX="$HOME/.npm-global"
       export PATH="$NPM_CONFIG_PREFIX/bin:$PATH"
 
-      if [ -z "$ANTHROPIC_AUTH_TOKEN" ] && [ -f "$HOME/NixOSenv/secrets.nix" ]; then
-        export ANTHROPIC_AUTH_TOKEN="$(nix eval --raw --impure --expr '(import "/home/qwerty/NixOSenv/secrets.nix").deepseek_api_key' 2>/dev/null || true)"
-      fi
-
+      # DeepSeek env vars set by deepseek() in .zshrc
       [[ -f ~/NixOSenv/dotfiles/zsh/.zshrc ]] && source ~/NixOSenv/dotfiles/zsh/.zshrc
 
       zstyle ':completion:*:git-checkout:*' sort false

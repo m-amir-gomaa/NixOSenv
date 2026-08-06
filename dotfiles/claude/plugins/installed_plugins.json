@@ -1,0 +1,134 @@
+{
+  "version": 2,
+  "plugins": {
+    "caveman@caveman": [
+      {
+        "scope": "user",
+        "installPath": "/home/qwerty/.claude/plugins/cache/caveman/caveman/25d22f864ad6",
+        "version": "25d22f864ad6",
+        "installedAt": "2026-06-30T08:21:43.435Z",
+        "lastUpdated": "2026-06-30T08:21:43.435Z",
+        "gitCommitSha": "25d22f864ad68cc447a4cb93aefde918aa4aec9f"
+      }
+    ],
+    "context7@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/qwerty/.claude/plugins/cache/claude-plugins-official/context7/unknown",
+        "version": "unknown",
+        "installedAt": "2026-06-30T19:42:26.990Z",
+        "lastUpdated": "2026-07-23T12:39:44.661Z"
+      }
+    ],
+    "github@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/qwerty/.claude/plugins/cache/claude-plugins-official/github/unknown",
+        "version": "unknown",
+        "installedAt": "2026-06-30T19:43:03.201Z",
+        "lastUpdated": "2026-07-23T12:39:44.664Z"
+      }
+    ],
+    "code-review@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/qwerty/.claude/plugins/cache/claude-plugins-official/code-review/unknown",
+        "version": "unknown",
+        "installedAt": "2026-06-30T19:43:23.885Z",
+        "lastUpdated": "2026-07-23T12:39:44.662Z"
+      }
+    ],
+    "playwright@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/qwerty/.claude/plugins/cache/claude-plugins-official/playwright/unknown",
+        "version": "unknown",
+        "installedAt": "2026-06-30T19:43:37.981Z",
+        "lastUpdated": "2026-07-23T12:39:44.662Z"
+      }
+    ],
+    "claude-code-setup@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/qwerty/.claude/plugins/cache/claude-plugins-official/claude-code-setup/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-06-30T19:43:52.240Z",
+        "lastUpdated": "2026-06-30T19:43:52.240Z"
+      }
+    ],
+    "security-guidance@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/qwerty/.claude/plugins/cache/claude-plugins-official/security-guidance/2.0.6",
+        "version": "2.0.6",
+        "installedAt": "2026-06-30T19:44:02.602Z",
+        "lastUpdated": "2026-06-30T19:44:02.602Z"
+      }
+    ],
+    "telegram@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/qwerty/.claude/plugins/cache/claude-plugins-official/telegram/0.0.6",
+        "version": "0.0.6",
+        "installedAt": "2026-06-30T19:44:21.988Z",
+        "lastUpdated": "2026-06-30T19:44:21.988Z"
+      }
+    ],
+    "stripe@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/qwerty/.claude/plugins/cache/claude-plugins-official/stripe/0.3.1",
+        "version": "0.3.1",
+        "installedAt": "2026-06-30T19:50:12.634Z",
+        "lastUpdated": "2026-07-23T12:39:48.673Z",
+        "gitCommitSha": "cc67124fa6ed230cda567e598dc9b06e17e23f40"
+      }
+    ],
+    "math-olympiad@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/qwerty/.claude/plugins/cache/claude-plugins-official/math-olympiad/unknown",
+        "version": "unknown",
+        "installedAt": "2026-06-30T19:55:02.055Z",
+        "lastUpdated": "2026-07-23T12:39:44.665Z"
+      }
+    ],
+    "windsor-ai@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/qwerty/.claude/plugins/cache/claude-plugins-official/windsor-ai/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-06-30T19:56:48.990Z",
+        "lastUpdated": "2026-06-30T19:56:48.990Z",
+        "gitCommitSha": "248a6994b15b410cc025b105bb4ed5558e9b1af9"
+      }
+    ],
+    "serena@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/qwerty/.claude/plugins/cache/claude-plugins-official/serena/unknown",
+        "version": "unknown",
+        "installedAt": "2026-06-30T20:01:01.447Z",
+        "lastUpdated": "2026-07-23T12:39:44.663Z"
+      }
+    ],
+    "session-report@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/qwerty/.claude/plugins/cache/claude-plugins-official/session-report/unknown",
+        "version": "unknown",
+        "installedAt": "2026-07-01T06:22:09.810Z",
+        "lastUpdated": "2026-07-23T12:39:44.662Z"
+      }
+    ],
+    "lua-lsp@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/qwerty/.claude/plugins/cache/claude-plugins-official/lua-lsp/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-07-22T08:14:41.520Z",
+        "lastUpdated": "2026-07-22T08:14:41.520Z"
+      }
+    ]
+  }
+}

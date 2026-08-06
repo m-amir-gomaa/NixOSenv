@@ -1,0 +1,13 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-keybindings.json",
+  "bindings": [
+    {
+      "context": "Chat",
+      "bindings": {
+        "ctrl+f": "chat:submit /flake-check",
+        "ctrl+g": "chat:submit /glog 5",
+        "ctrl+o": "chat:submit /sessions"
+      }
+    }
+  ]
+}

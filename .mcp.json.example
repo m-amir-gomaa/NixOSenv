@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "utcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@utcp/mcp-bridge"],
+      "env": {
+        "UTCP_CONFIG_FILE": "/home/qwerty/.utcp/.utcp_config.json"
+      }
+    },
+    "agent-vision": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@kitlau/agent-vision-mcp"],
+      "env": {
+        "VISION_API_KEY": "__FILL_FROM_ENV__",
+        "VISION_BASE_URL": "https://openrouter.ai/api/v1",
+        "VISION_MODEL_NAME": "google/gemini-3.1-flash-lite",
+        "VISION_CACHE_ENABLED": "true",
+        "VISION_MAX_TOKENS": "2048"
+      }
+    }
+  }
+}

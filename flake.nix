@@ -44,6 +44,14 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # ── disko — declarative disk partitioning ──────────────────────────────────
+    # Describes the disk layout in Nix (see disko.nix). Used ONLY when
+    # provisioning a fresh machine from the installer ISO — the running system
+    # never repartitions its own disks (sda/THE_VAULT data disk untouched).
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     # ── german-pronunciation-cli — Rust-based German pronunciation trainer ──────
     # Replaces the deprecated aussprachetrainer flake.
     # CLI tool (gp): IPA transcription, Edge TTS, Whisper STT scoring,
@@ -57,6 +65,7 @@
       nixpkgs,
       # german-pronunciation-cli,  # uncomment when flake.nix is added to the repo
       home-manager,
+      disko,
       ...
     }:
     let
@@ -75,6 +84,10 @@
         # autocommit: the AI autocommit tool (see modules/autocommit-pkg.nix)
         autocommit = pkgs.callPackage ./modules/autocommit-pkg.nix { };
         antigravity = pkgs.callPackage ./modules/antigravity-hub.nix { };
+        instascript = pkgs.callPackage ./modules/instascript.nix { };
+        # disko: pinned CLI for declarative partitioning during fresh installs.
+        # Usage: sudo nix run .#disko -- --mode disko ./disko.nix  (fresh machine ONLY)
+        disko = disko.packages.${system}.default;
       };
       # ── NixOS system configuration ────────────────────────────────────────────
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
@@ -90,6 +103,7 @@
             nixpkgs.config.allowUnfree = true;
             environment.systemPackages = [
               (pkgs.callPackage ./modules/antigravity-hub.nix { })
+              (pkgs.callPackage ./modules/instascript.nix { })
               # german-pronunciation-cli.packages.x86_64-linux.default  # uncomment when flake.nix is added to the repo
             ];
           })
@@ -111,6 +125,21 @@
                   });
                   # autocommit: our custom Python package for AI-powered git commits
                   autocommit = final.callPackage ./modules/autocommit-pkg.nix { };
+                  # ttyd: libwebsockets loads its libuv event-loop plugin
+                  # (libwebsockets-evlib_uv.so) at runtime via dlopen. On NixOS the
+                  # store lib dir is not on the dlopen search path, so ttyd fails
+                  # with "lws_create_context: failed to load evlib_uv" and VHS
+                  # (which spawns ttyd) dies with ERR_CONNECTION_REFUSED. Fix: put
+                  # ${libwebsockets}/lib on LD_LIBRARY_PATH via the wrapper.
+                  ttyd = prev.ttyd.overrideAttrs (old: {
+                    nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ final.makeWrapper ];
+                    postFixup =
+                      (old.postFixup or "")
+                      + ''
+                        wrapProgram $out/bin/ttyd \
+                          --prefix LD_LIBRARY_PATH : ${final.libwebsockets}/lib
+                      '';
+                  });
                   # Hugo: pinned to 0.156.0 because later versions changed the
                   # template syntax in ways that broke the existing blog templates.
                   # overrideAttrs replaces only src + version; everything else
@@ -158,7 +187,7 @@
           # share the same schedule.
           {
             system.autoUpgrade = {
-              enable = true;
+              enable = false;
               flake = self.outPath;
               flags = [
                 "--update-input"

@@ -203,7 +203,6 @@
       env = [
         "LIBVA_DRIVER_NAME,nvidia"
         "XDG_SESSION_TYPE,wayland"
-        "GBM_BACKEND,nvidia-drm"
         "__GLX_VENDOR_LIBRARY_NAME,nvidia"
         "WLR_NO_HARDWARE_CURSORS,1"
         "QT_QPA_PLATFORM,wayland"
@@ -409,11 +408,13 @@
         # 1. $mod+R          → ⏺️ Video Only (Silent)
         # 2. $mod+W          → ⏺️ Screen + Desktop Audio
         # 3. $mod+T          → ⏺️ Screen + Microphone
-        # 4. Same key again  → ⏸️ / ▶️ Toggle Pause/Resume
-        # 5. $mod+S anytime  → ⏹️ Stop and Save
+        # 4. $mod+P          → ⏸️ / ▶️ Pause/Resume (chunked — no timeline gap)
+        # 5. Same mode key again → also toggles pause/resume
+        # 6. $mod+S anytime  → ⏹️ Stop, concat chunks, save
         "$mod, R, exec, ~/NixOSenv/scripts/record.sh toggle video"
         "$mod, W, exec, ~/NixOSenv/scripts/record.sh toggle internal"
         "$mod, T, exec, ~/NixOSenv/scripts/record.sh toggle mic"
+        "$mod, P, exec, ~/NixOSenv/scripts/record.sh toggle-pause"
         "$mod, S, exec, ~/NixOSenv/scripts/record.sh stop"
 
         "$mod, E, exec, nautilus"
@@ -438,9 +439,10 @@
         "$mod SHIFT, N,     exec, swaync-client -t -sw"
         "$mod, Q,           killactive"
         "$mod SHIFT, Q,     exit"
+        "$mod SHIFT, L,           exec, loginctl lock-session"
         "$mod, F,           fullscreen, 0"
         "$mod SHIFT, F,     togglefloating"
-        "$mod, P,           pseudo"
+        "$mod SHIFT, P,    pseudo"
         "$mod, backslash,   layoutmsg, togglesplit"
 
         # ── Focus movement ───────────────────────────────────────────────────
