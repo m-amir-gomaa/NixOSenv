@@ -123,3 +123,6 @@ deepseek() {
 
 # Auto-enable DeepSeek on every new shell so Claude Code always uses it
 deepseek
+
+# Force flash only — bypasses opusplan routing, no plan-mode escalation to pro
+alias clf='claude --model deepseek-v4-flash'

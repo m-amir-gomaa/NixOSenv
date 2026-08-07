@@ -4,7 +4,6 @@
     "defaultMode": "acceptEdits"
   },
   "model": "opusplan",
-  "advisorModel": "opus",
   "modelOverrides": {
     "claude-opus-4-8": "deepseek-v4-pro",
     "claude-sonnet-5": "deepseek-v4-flash",
