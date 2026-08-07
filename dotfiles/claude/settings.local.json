@@ -3,7 +3,7 @@
   "permissions": {
     "defaultMode": "acceptEdits"
   },
-  "model": "deepseek-v4-flash",
+  "model": "opusplan",
   "advisorModel": "opus",
   "modelOverrides": {
     "claude-opus-4-8": "deepseek-v4-pro",
@@ -12,7 +12,8 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "bash \"/home/qwerty/.claude/plugins/cache/caveman/caveman/25d22f864ad6/src/hooks/caveman-statusline.sh\""
+    "command": "bash \"/home/qwerty/NixOSenv/dotfiles/claude/statusline.sh\"",
+    "refreshInterval": 300
   },
   "autoMemoryEnabled": true,
   "hooks": {
