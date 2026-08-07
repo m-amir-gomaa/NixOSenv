@@ -9,11 +9,6 @@
     "claude-sonnet-5": "deepseek-v4-flash",
     "claude-haiku-4-5": "deepseek-v4-flash"
   },
-  "statusLine": {
-    "type": "command",
-    "command": "bash \"/home/qwerty/NixOSenv/dotfiles/claude/statusline.sh\"",
-    "refreshInterval": 300
-  },
   "autoMemoryEnabled": true,
   "hooks": {
     "Notification": [
