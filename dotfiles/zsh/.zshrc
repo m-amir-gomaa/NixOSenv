@@ -106,18 +106,19 @@ alias hr='hyprctl reload'
 #   ANTHROPIC_DEFAULT_HAIKU_MODEL    → used when /model haiku is requested
 #   CLAUDE_CODE_SUBAGENT_MODEL       → model used by spawned sub-agents
 #
+# ANTHROPIC_MODEL=opusplan → flash for execution, pro during plan mode (auto-routing)
 # deepseek-v4-flash = fast + cheap (default for most tasks)
 # deepseek-v4-pro   = slower + smarter (mapped to "opus" for heavy reasoning)
 deepseek() {
   export ANTHROPIC_BASE_URL="https://api.deepseek.com/anthropic"
   export ANTHROPIC_AUTH_TOKEN="$DEEPSEEK_API_KEY"
   export ANTHROPIC_API_KEY="$DEEPSEEK_API_KEY"
-  export ANTHROPIC_MODEL="deepseek-v4-flash"
+  export ANTHROPIC_MODEL="opusplan"
   export ANTHROPIC_DEFAULT_OPUS_MODEL="deepseek-v4-pro"
   export ANTHROPIC_DEFAULT_SONNET_MODEL="deepseek-v4-flash"
   export ANTHROPIC_DEFAULT_HAIKU_MODEL="deepseek-v4-flash"
   export CLAUDE_CODE_SUBAGENT_MODEL="deepseek-v4-flash"
-  echo "DeepSeek active — Flash (default) / Pro (/model opus)"
+  echo "DeepSeek active — Flash (exec) / Pro (plan mode, via opusplan)"
 }
 
 # Auto-enable DeepSeek on every new shell so Claude Code always uses it
